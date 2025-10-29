@@ -48,6 +48,9 @@ int main(int argc, char* argv[])
         if (status != 0)
         {
                 printf("main error: can't create thread, status = %d\n", status);
+                delete []tid;
+                delete []err;
+                delete []a;
                 return -11;
 
         }
@@ -59,6 +62,9 @@ int main(int argc, char* argv[])
         if (status != 0)
         {
                 printf("error in pthread_join, status = %d\n", status);
+                delete []tid;
+                delete []err;
+                delete []a;
                 return -12;
         }
 
@@ -92,7 +98,9 @@ int main(int argc, char* argv[])
                 break;
             }
         }
-
+        delete []err;
+        delete []a;
+        delete []tid;
         return -1;
     }
 
@@ -104,7 +112,9 @@ int main(int argc, char* argv[])
     }
 
     printf("Total result : %d\n",totalres);
-          
-
+    
+    delete []tid;
+    delete []err;
+    delete []a;
     return 0;
 }

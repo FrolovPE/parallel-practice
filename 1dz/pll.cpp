@@ -60,6 +60,8 @@ void* thread_func(void *ptr)
 
                     fclose(f);
 
+                    delete []arr;
+
                     return (int *)-2;
 
                 }
@@ -115,6 +117,7 @@ void* thread_func(void *ptr)
     // }
     // else
     // {
+        delete []arr;
         return (int*)SUCCESS;
     // }
 }

@@ -16,7 +16,7 @@ void* thread_func(void *ptr)
         f = fopen(a->name,"r");
         if(!f)
         {
-            printf("file %s doesnt exist or cant be open\n",a->name);
+            // printf("file %s doesnt exist or cant be open\n",a->name);
 
             err[k] = -1;
 
@@ -84,7 +84,7 @@ void* thread_func(void *ptr)
             if(n < 3)
             {
                 res = 0;
-                printf("in file %s n < 3, res = %d\n",a->name,res);
+                // printf("in file %s n < 3, res = %d\n",a->name,res);
             }
             else
             {

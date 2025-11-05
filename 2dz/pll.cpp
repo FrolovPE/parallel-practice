@@ -60,6 +60,20 @@ void* thread_func(void *ptr)
 
             arr = new double[n];
 
+            if(n <= 0 )
+            {
+                err[k] = 0;
+
+                fclose(f);
+
+                pthread_mutex_unlock(m);
+                pthread_barrier_wait(barrier);
+                pthread_barrier_wait(barrier);
+                delete []arr;
+
+                return (int*)0;
+            }
+
             fclose(f);
 
             f = fopen(a->name,"r");
@@ -98,7 +112,7 @@ void* thread_func(void *ptr)
             }
             
             locMin[k] = localMin;
-            err[k] == 0;
+            err[k] = 0;
 
         }
 

@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
     int status;
     int s = 0;
     int totalres = 0;
-    double globalVal;
+    double globalVal = 0;
 
     if(argc == 1)
     {
@@ -71,6 +71,7 @@ int main(int argc, char* argv[])
         if (status != 0)
         {
                 printf("main error: can't create thread, status = %d\n", status);
+                pthread_mutex_destroy (&m);
                 pthread_barrier_destroy(&barrier);
                 delete []locMin;
                 delete []tid;
@@ -87,6 +88,7 @@ int main(int argc, char* argv[])
         if (status != 0)
         {
                 printf("error in pthread_join, status = %d\n", status);
+                pthread_mutex_destroy (&m);
                 pthread_barrier_destroy(&barrier);
                 delete []locMin;
                 delete []tid;

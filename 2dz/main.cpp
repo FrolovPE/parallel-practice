@@ -4,6 +4,8 @@
 #include "args.h"
 
 
+static pthread_barrier_t barrier;
+
 int main(int argc, char* argv[])
 {
     int p = argc-1;
@@ -11,6 +13,7 @@ int main(int argc, char* argv[])
     int status;
     int s = 0;
     int totalres = 0;
+    double globalVal;
 
     if(argc == 1)
     {
@@ -22,13 +25,25 @@ int main(int argc, char* argv[])
 
     int *err = new int[p];
 
-    for(k = 0; k < p ; k++) err[k]=0;
+    for(k = 0; k < p ; k++) err[k]=-17;
 
     args *a = new args[p];
 
     double *locMin = new double[p];
 
     for(k = 0; k < p ; k++) locMin[k]=0;
+
+    if(pthread_barrier_init(&barrier,0,p)!=0)
+    {
+        printf("Cant init barrier\n");
+        delete []err;
+        delete []a;
+        delete []tid;
+        delete []locMin;
+        return -5;
+    }
+
+    pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 
     for(k = 0 ; k < p; k++)
     {
@@ -37,6 +52,9 @@ int main(int argc, char* argv[])
         a[k].p = p;
         a[k].err = err;
         a[k].locMin = locMin;
+        a[k].barrier = &barrier;
+        a[k].m = &m;
+        a[k].globalVal = &globalVal;
         err[k] = 0;
 
     }
@@ -53,6 +71,8 @@ int main(int argc, char* argv[])
         if (status != 0)
         {
                 printf("main error: can't create thread, status = %d\n", status);
+                pthread_barrier_destroy(&barrier);
+                delete []locMin;
                 delete []tid;
                 delete []err;
                 delete []a;
@@ -67,6 +87,8 @@ int main(int argc, char* argv[])
         if (status != 0)
         {
                 printf("error in pthread_join, status = %d\n", status);
+                pthread_barrier_destroy(&barrier);
+                delete []locMin;
                 delete []tid;
                 delete []err;
                 delete []a;
@@ -74,6 +96,8 @@ int main(int argc, char* argv[])
         }
 
     }
+
+    pthread_mutex_destroy(&m);
 
     
 
@@ -97,12 +121,17 @@ int main(int argc, char* argv[])
             case -2:
                 printf("file %s has bad content\n",a[k].name);
                 break;
-
+            
+            case -17:
+            printf("non initialized thread %d connected with file %s\n",a[k].k,a[k].name);
+            break;
             default:
                 printf("file %s has unknown error\n",a[k].name);
                 break;
             }
         }
+        pthread_barrier_destroy(&barrier);
+        delete []locMin;
         delete []err;
         delete []a;
         delete []tid;
@@ -117,7 +146,9 @@ int main(int argc, char* argv[])
     }
 
     printf("Total result : %d\n",totalres);
-    
+
+    pthread_barrier_destroy(&barrier);
+    delete []locMin;
     delete []tid;
     delete []err;
     delete []a;

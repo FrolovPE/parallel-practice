@@ -28,9 +28,13 @@ main.o: $(allcppfiles)
 	$(cxx) -c $< -o $@
 
 clean:
-	rm -f $(obj) $(exec)
+	  
+	rm -f $(obj) $(exec) Frolov_PS.zip pll.zip
+	
+	
+
+mainzip:
+	zip Frolov_PS.zip $(allcppfiles) makefile 
 
 zip:
-	zip Frolov_PS.zip $(allcppfiles) makefile  Frolov_PS.zip
-
-
+	zip pll.zip $(allcppfiles) makefile  

@@ -3,19 +3,22 @@
 
 void* thread_func(void *ptr)
 {
-    static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
-    static pthread_barrier_t barrier;
+    
+    
     args *a = (args*) ptr;
     int *err = a->err;double *locMin = a->locMin;
     int n = 0; int k=a->k;
-    double x,localMin,globalMin;
+    double x,localMin;
     double *arr;
+    double *globalMin = a->globalVal;
     int p = a->p;
     int res = 0;
-    pthread_barrier_init(&barrier,0,p);
+    pthread_barrier_t *barrier = a->barrier;
+    pthread_mutex_t *m = a->m;
+    
     // double curr,prev,next;
 
-    // pthread_mutex_lock(&m);
+    pthread_mutex_lock(m);
         FILE *f;
         f = fopen(a->name,"r");
         if(!f)
@@ -23,6 +26,10 @@ void* thread_func(void *ptr)
             // printf("file %s doesnt exist or cant be open\n",a->name);
 
             err[k] = -1;
+            pthread_mutex_unlock(m);
+
+            pthread_barrier_wait(barrier);
+            pthread_barrier_wait(barrier);
 
             return (int*)-1;
 
@@ -42,6 +49,10 @@ void* thread_func(void *ptr)
                 err[k] = -2;
 
                 fclose(f);
+
+                pthread_mutex_unlock(m);
+                pthread_barrier_wait(barrier);
+                pthread_barrier_wait(barrier);
 
                 return (int*)-2;
 
@@ -66,6 +77,10 @@ void* thread_func(void *ptr)
 
                     delete []arr;
 
+                    pthread_mutex_unlock(m);
+                    pthread_barrier_wait(barrier);
+                    pthread_barrier_wait(barrier);
+
                     return (int *)-2;
 
                 }
@@ -83,39 +98,48 @@ void* thread_func(void *ptr)
             }
             
             locMin[k] = localMin;
+            err[k] == 0;
 
         }
 
-        pthread_barrier_wait(&barrier);
+        pthread_mutex_unlock(m);
 
-        if(k == p-1){
-            globalMin = locMin[0];
+        int serialT = pthread_barrier_wait(barrier);
+
+        if(serialT == PTHREAD_BARRIER_SERIAL_THREAD)
+        {   
+            // printf("thread %d is serial with filename %s\n",k,a->name);
+            *(globalMin) = locMin[0];
             for(int i = 0 ; i < p; i++)
             {
-                if(locMin[i] < globalMin)
-                    globalMin = locMin[i];
+                if(err[i] == 0 && locMin[i] < *(globalMin))
+                    *(globalMin) = locMin[i];
             }
         }
 
-         pthread_barrier_wait(&barrier);
+        
+
+        pthread_barrier_wait(barrier);
+
+        // printf("globalMin in thread %d equal %lf\n",k,*(globalMin));
 
         for(int i =0 ; i < n; i++)
         {
-            if(arr[i] < globalMin)
+            if(arr[i] < *(globalMin)/2.0 )
                 res++;
         }
 
         a->res = res;
         
-    //    pthread_mutex_unlock(&m);
+       
 
 
 
 
 
 
-        pthread_mutex_destroy(&m);
-        pthread_barrier_destroy(&barrier);
+        
+        
         delete []arr;
         return (int*)SUCCESS;
     // }

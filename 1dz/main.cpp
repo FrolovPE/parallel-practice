@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     //     printf("name a[%d] = %s\n",k,a[k].name);
     // }
 
-    for (k = 0; k < p; k++) 
+    for (k = 1; k < p; k++) 
     {
         status = pthread_create(&tid[k], 0, thread_func, (void*) &a[k]);
 
@@ -56,7 +56,9 @@ int main(int argc, char* argv[])
         }
     }
 
-    for (k = 0; k < p; k++) 
+    thread_func(a+0);
+
+    for (k = 1; k < p; k++) 
     {
         status = pthread_join(tid[k],0);
         if (status != 0)
@@ -69,6 +71,8 @@ int main(int argc, char* argv[])
         }
 
     }
+
+    
 
     
 

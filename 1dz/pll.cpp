@@ -8,7 +8,7 @@ void* thread_func(void *ptr)
     int n = 0; int k=a->k;
     double x;
     double *arr;
-    int p = a->p;
+    // int p = a->p;
     // double curr,prev,next;
 
     

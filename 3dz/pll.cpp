@@ -27,7 +27,7 @@ void* thread_func(void *ptr)
         f = fopen(a->name,"r");
         if(!f)
         {
-            printf("file %s doesnt exist or cant be open\n",a->name);
+            // printf("file %s doesnt exist or cant be open\n",a->name);
             exitflag = true;
 
             err[k] = -1;
@@ -52,11 +52,11 @@ void* thread_func(void *ptr)
             }
             if(!feof(f))
             {
-                printf("file %s has bad content\n",a->name);
+                // printf("file %s has bad content\n",a->name);
 
                 err[k] = -2;
                 exitflag = true;
-                printf("exitflag  = %d in thread %d\n",exitflag,k);
+                // printf("exitflag  = %d in thread %d\n",exitflag,k);
 
                 fclose(f);
 
@@ -74,7 +74,7 @@ void* thread_func(void *ptr)
 
             pthread_barrier_wait(barrier);
 
-            printf("exitflag  = %d in thread %d\n",exitflag,k);
+            // printf("exitflag  = %d in thread %d\n",exitflag,k);
 
             if(exitflag)
             {

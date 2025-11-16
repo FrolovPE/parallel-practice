@@ -6,11 +6,14 @@ void* thread_func(void *ptr)
     args *a = (args*) ptr;
     int *err = a->err;
     int n = 0; int k=a->k;
-    // double x;
+    double *locMin = a->locMin;
+    int p = a->p;
+    double tmin = 0;
     char *name = a->name;
-    // int p = a->p;
     pthread_barrier_t *barrier = a->barrier;
-    double curr=0,prev=0,next=0;
+    double curr=0;
+    int res = 0;
+    a->res = res;
 
     
         FILE *f;
@@ -24,31 +27,24 @@ void* thread_func(void *ptr)
         }
         else
         {
-            int res = 0;
-            a->res = res;
+            
 
-            while(fscanf(f,"%lf",&next) == 1)
+            while(fscanf(f,"%lf",&curr) == 1)
             {
                 n++;
 
-                if(n == 1)
-                {
-                    prev = next;
-                }
-                else if(n == 2)
-                {
-                    curr = next;
-                }
-                else
-                    {   
-                        // printf("IN FILE %s\n",name);
-                        if(curr > next && curr > prev) res++;
-                        // tmp = curr;
-                        // printf("prev = %lf curr = %lf next = %lf\n",prev,curr,next);
-                        prev = curr;
-                        curr = next;
+                if(n>0)
+                {   
+                    if(n == 1) tmin = curr;
+                    else
+                    {
+                        if(curr < tmin)
+                        {
+                            tmin = curr;
+                        }
                     }
-                a->res = res;
+
+                }
             }
             if(!feof(f))
             {
@@ -57,13 +53,26 @@ void* thread_func(void *ptr)
                 err[k] = -2;
 
             }
+
+            fclose(f);
+
+            // printf("tmin in file %s = %lf\n",name,tmin);
+            locMin[k] = tmin;
             
         }
-        
+
     
-    int p = a->p;
+    
+    
 
     pthread_barrier_wait(barrier);
+
+    // for(int i =0 ; i < p; i++)
+    // {
+    //     printf("locMin[%d] = %lf\n",i,locMin[i]);
+    // }
+
+    static double globalMin = locMin[0];
 
     if(k == 0 )
     {
@@ -84,27 +93,52 @@ void* thread_func(void *ptr)
                     break;
                 case -1:
                     printf("File %s doesnt exist or cant be open\n",a[k].name);
-                    return (int*)-1;
                     break;
 
                 case -2:
                     printf("File %s has bad content\n",a[k].name);
-                    return (int*)-2;
                     break;
 
                 default:
                     printf("File %s has unknown error\n",a[k].name);
-                    return (int*)-17;
                     break;
                 }
             }
             
             
         }
+        else
+        {
+            for(int i =0 ;i < p ; i++)
+            {
+                if(locMin[i] < globalMin)
+                {
+                    globalMin = locMin[i];
+                }
+            }
+        }
     }
+
+    pthread_barrier_wait(barrier);
+
+    // printf("globalMin  = %lf\n",globalMin);
+
+    f = fopen(name,"r");
+
+    for(int i = 0; i < n ; i++)
+    {
+        fscanf(f,"%lf",&curr);
+
+        if(curr < globalMin/2.0) res++;
+    }
+
+
+    a->res = res;
+
+    fclose(f);
 
    
     
-        return (void*)SUCCESS;
+    return (void*)SUCCESS;
     
 }

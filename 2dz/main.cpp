@@ -21,9 +21,13 @@ int main(int argc, char* argv[])
     pthread_t *tid = new pthread_t[p];
 
     int *err = new int[p];
+    double *locMin = new double[p];
 
-    for(k = 0; k < p ; k++) err[k]=0;
-
+    for(k = 0; k < p ; k++) 
+    {
+        locMin[k] = 0;
+        err[k]=0;
+    }
     args *a = new args[p];
 
     pthread_barrier_t barrier;
@@ -36,7 +40,7 @@ int main(int argc, char* argv[])
         a[k].k = k;
         a[k].p = p;
         a[k].err = err;
-        err[k] = 0;
+        a[k].locMin = locMin;
         a[k].errsum = &errsum;
         a[k].barrier = &barrier;
 
@@ -51,6 +55,7 @@ int main(int argc, char* argv[])
         if (status != 0)
         {
                 printf("main error: can't create thread, status = %d\n", status);
+                delete []locMin;
                 delete []tid;
                 delete []err;
                 delete []a;
@@ -68,6 +73,7 @@ int main(int argc, char* argv[])
         if (status != 0)
         {
                 printf("error in pthread_join, status = %d\n", status);
+                delete []locMin;
                 delete []tid;
                 delete []err;
                 delete []a;
@@ -79,6 +85,7 @@ int main(int argc, char* argv[])
     // printf("s = %d\n",errsum);
     if(errsum < 0) 
     {
+        delete []locMin;
         delete []tid;
         delete []err;
         delete []a;
@@ -100,7 +107,7 @@ int main(int argc, char* argv[])
     }
 
     printf("Total result : %d\n",totalres);
-    
+    delete []locMin;
     delete []tid;
     delete []err;
     delete []a;

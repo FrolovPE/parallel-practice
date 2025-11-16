@@ -57,7 +57,7 @@ void* thread_func(void *ptr)
                 err[k] = -2;
 
             }
-            
+            fclose(f);
         }
         
     

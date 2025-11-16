@@ -1,3 +1,6 @@
+#ifndef ARGS_H
+#define ARGS_H
+
 class args
 {
 public:
@@ -7,12 +10,21 @@ int k{};
 int p{};
 int res{};
 int *err{};
-double **allarrays{};
-pthread_barrier_t *barrier{};
-pthread_mutex_t *m{};
+int *errsum{};
 double *locMin{};
-double *globalVal{};
+args *allargs{};
+pthread_barrier_t *barrier{};
+
+int x1{};
+int x2{};
+int x3{};
+int x4{};
+
+int maxlen{};
+int currlen{};
 
 args() = default;
 
 };
+
+#endif

@@ -3,22 +3,16 @@
 
 void* thread_func(void *ptr)
 {
-    
-    
     args *a = (args*) ptr;
-    int *err = a->err;double *locMin = a->locMin;
+    int *err = a->err;
     int n = 0; int k=a->k;
-    double x,localMin;
-    double *arr;
-    double *globalMin = a->globalVal;
-    int p = a->p;
-    int res = 0;
+    // double x;
+    char *name = a->name;
+    // int p = a->p;
     pthread_barrier_t *barrier = a->barrier;
-    pthread_mutex_t *m = a->m;
-    
-    // double curr,prev,next;
+    double curr=0,prev=0,next=0;
 
-    pthread_mutex_lock(m);
+    
         FILE *f;
         f = fopen(a->name,"r");
         if(!f)
@@ -26,21 +20,35 @@ void* thread_func(void *ptr)
             // printf("file %s doesnt exist or cant be open\n",a->name);
 
             err[k] = -1;
-            pthread_mutex_unlock(m);
-
-            pthread_barrier_wait(barrier);
-            pthread_barrier_wait(barrier);
-
-            return (int*)-1;
 
         }
         else
         {
-           
+            int res = 0;
+            a->res = res;
 
-            while(fscanf(f,"%lf",&x) == 1)
+            while(fscanf(f,"%lf",&next) == 1)
             {
                 n++;
+
+                if(n == 1)
+                {
+                    prev = next;
+                }
+                else if(n == 2)
+                {
+                    curr = next;
+                }
+                else
+                    {   
+                        // printf("IN FILE %s\n",name);
+                        if(curr > next && curr > prev) res++;
+                        // tmp = curr;
+                        // printf("prev = %lf curr = %lf next = %lf\n",prev,curr,next);
+                        prev = curr;
+                        curr = next;
+                    }
+                a->res = res;
             }
             if(!feof(f))
             {
@@ -48,113 +56,55 @@ void* thread_func(void *ptr)
 
                 err[k] = -2;
 
-                fclose(f);
-
-                pthread_mutex_unlock(m);
-                pthread_barrier_wait(barrier);
-                pthread_barrier_wait(barrier);
-
-                return (int*)-2;
-
-            }
-
-            arr = new double[n];
-
-            if(n <= 0 )
-            {
-                err[k] = 0;
-
-                fclose(f);
-
-                pthread_mutex_unlock(m);
-                pthread_barrier_wait(barrier);
-                pthread_barrier_wait(barrier);
-                delete []arr;
-
-                return (int*)0;
-            }
-
-            fclose(f);
-
-            f = fopen(a->name,"r");
-
-            for(int i = 0 ;i < n; i++)
-            {
-                
-                if(fscanf(f,"%lf",&arr[i]) == 0)
-                {
-                    // printf("file %s has bad content\n",a->name);
-
-                    err[k] = -2;
-
-                    fclose(f);
-
-                    delete []arr;
-
-                    pthread_mutex_unlock(m);
-                    pthread_barrier_wait(barrier);
-                    pthread_barrier_wait(barrier);
-
-                    return (int *)-2;
-
-                }
-
-                
-                
-            }
-
-            localMin = arr[0];
-
-            for(int i =0 ; i < n; i++)
-            {
-                if(arr[i] < localMin)
-                    localMin = arr[i];
             }
             
-            locMin[k] = localMin;
-            err[k] = 0;
-
         }
-
-        pthread_mutex_unlock(m);
-
-        int serialT = pthread_barrier_wait(barrier);
-
-        if(serialT == PTHREAD_BARRIER_SERIAL_THREAD)
-        {   
-            // printf("thread %d is serial with filename %s\n",k,a->name);
-            *(globalMin) = locMin[0];
-            for(int i = 0 ; i < p; i++)
-            {
-                if(err[i] == 0 && locMin[i] < *(globalMin))
-                    *(globalMin) = locMin[i];
-            }
-        }
-
         
+    
+    int p = a->p;
 
-        pthread_barrier_wait(barrier);
+    pthread_barrier_wait(barrier);
 
-        // printf("globalMin in thread %d equal %lf\n",k,*(globalMin));
+    if(k == 0 )
+    {
+        int *errsum = a->errsum;
 
-        for(int i =0 ; i < n; i++)
+        for(k = 0 ; k < p; k++)
+            *errsum += err[k];
+        
+        if(*errsum<0)
         {
-            if(arr[i] < *(globalMin)/2.0 )
-                res++;
+            printf("Have errors, programm stopped\n");
+
+            for(k = 0 ; k < p; k++)
+            {
+                switch (err[k])
+                {
+                case 0:
+                    break;
+                case -1:
+                    printf("File %s doesnt exist or cant be open\n",a[k].name);
+                    return (int*)-1;
+                    break;
+
+                case -2:
+                    printf("File %s has bad content\n",a[k].name);
+                    return (int*)-2;
+                    break;
+
+                default:
+                    printf("File %s has unknown error\n",a[k].name);
+                    return (int*)-17;
+                    break;
+                }
+            }
+            
+            
         }
+    }
 
-        a->res = res;
-        
-       
-
-
-
-
-
-
-        
-        
-        delete []arr;
-        return (int*)SUCCESS;
-    // }
+   
+    
+        return (void*)SUCCESS;
+    
 }

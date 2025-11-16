@@ -6,10 +6,11 @@ void* thread_func(void *ptr)
     args *a = (args*) ptr;
     int *err = a->err;
     int n = 0; int k=a->k;
-    double x;
-    double *arr;
+    // double x;
+    char *name = a->name;
     // int p = a->p;
-    // double curr,prev,next;
+    pthread_barrier_t *barrier = a->barrier;
+    double curr=0,prev=0,next=0;
 
     
         FILE *f;
@@ -20,16 +21,34 @@ void* thread_func(void *ptr)
 
             err[k] = -1;
 
-            return (int*)-1;
-
         }
         else
         {
             int res = 0;
+            a->res = res;
 
-            while(fscanf(f,"%lf",&x) == 1)
+            while(fscanf(f,"%lf",&next) == 1)
             {
                 n++;
+
+                if(n == 1)
+                {
+                    prev = next;
+                }
+                else if(n == 2)
+                {
+                    curr = next;
+                }
+                else
+                    {   
+                        // printf("IN FILE %s\n",name);
+                        if(curr > next && curr > prev) res++;
+                        // tmp = curr;
+                        // printf("prev = %lf curr = %lf next = %lf\n",prev,curr,next);
+                        prev = curr;
+                        curr = next;
+                    }
+                a->res = res;
             }
             if(!feof(f))
             {
@@ -37,87 +56,55 @@ void* thread_func(void *ptr)
 
                 err[k] = -2;
 
-                fclose(f);
-
-                return (int*)-2;
-
             }
-
-            arr = new double[n];
-
-            fclose(f);
-
-            f = fopen(a->name,"r");
-
-            for(int i = 0 ;i < n; i++)
-            {
-                
-                if(fscanf(f,"%lf",&arr[i]) == 0)
-                {
-                    // printf("file %s has bad content\n",a->name);
-
-                    err[k] = -2;
-
-                    fclose(f);
-
-                    delete []arr;
-
-                    return (int *)-2;
-
-                }
-
-                
-                
-            }
-
-            // printf("\nn = %d\n",n);
-
-            // printf("\narr in file %s: ",a->name);
-
-            // for(int i =0 ; i < n; i++)
-            // {
-            //     printf("%lf ",arr[i]);
-
-            //     if(i == n-1) printf("\n");
-            // }
-
-            if(n < 3)
-            {
-                res = 0;
-                // printf("in file %s n < 3, res = %d\n",a->name,res);
-            }
-            else
-            {
-
-                for(int i =1 ; i < n-1; i++)
-                {
-                    if((arr[i] > arr[i-1]) && (arr[i] > arr[i+1])) res++;
-                }
             
-
-                // printf("in file %s res = %d\n",a->name,res);
-            }
-
-            a->res = res;
         }
         
     
+    int p = a->p;
 
-    // int s = 0;
+    pthread_barrier_wait(barrier);
 
-    // for(k = 0; k < p ; k++)
-    // {
-    //     s+=err[k];
-    // }
+    if(k == 0 )
+    {
+        int *errsum = a->errsum;
 
-    // if(s < 0)
-    // {
-    //     printf("have errors\n");
-    //     return (int*)-1;
-    // }
-    // else
-    // {
-        delete []arr;
-        return (int*)SUCCESS;
-    // }
+        for(k = 0 ; k < p; k++)
+            *errsum += err[k];
+        
+        if(*errsum<0)
+        {
+            printf("Have errors, programm stopped\n");
+
+            for(k = 0 ; k < p; k++)
+            {
+                switch (err[k])
+                {
+                case 0:
+                    break;
+                case -1:
+                    printf("File %s doesnt exist or cant be open\n",a[k].name);
+                    return (int*)-1;
+                    break;
+
+                case -2:
+                    printf("File %s has bad content\n",a[k].name);
+                    return (int*)-2;
+                    break;
+
+                default:
+                    printf("File %s has unknown error\n",a[k].name);
+                    return (int*)-17;
+                    break;
+                }
+            }
+            
+            
+        }
+    }
+
+   
+    
+        return (void*)SUCCESS;
+    
 }

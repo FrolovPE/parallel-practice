@@ -1,3 +1,6 @@
+#ifndef ARGS_H
+#define ARGS_H
+
 class args
 {
 public:
@@ -7,5 +10,9 @@ int k{};
 int p{};
 int res{};
 int *err{};
+int *errsum{};
+pthread_barrier_t *barrier{};
 
 };
+
+#endif

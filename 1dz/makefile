@@ -28,7 +28,7 @@ main.o: $(allcppfiles)
 	$(cxx) -c $< -o $@
 
 clean:
-	rm -f $(obj) $(exec)
+	rm -f $(obj) $(exec) *zip
 
 zip:
 	zip Frolov_PS.zip $(allcppfiles) makefile

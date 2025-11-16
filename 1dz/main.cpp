@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     int p = argc-1;
     int k;
     int status;
-    int s = 0;
+    int errsum = 0;
     int totalres = 0;
 
     if(argc == 1)
@@ -26,6 +26,10 @@ int main(int argc, char* argv[])
 
     args *a = new args[p];
 
+    pthread_barrier_t barrier;
+
+    pthread_barrier_init(&barrier,0,p);
+
     for(k = 0 ; k < p; k++)
     {
         a[k].name = argv[k+1];
@@ -33,13 +37,12 @@ int main(int argc, char* argv[])
         a[k].p = p;
         a[k].err = err;
         err[k] = 0;
+        a[k].errsum = &errsum;
+        a[k].barrier = &barrier;
 
     }
 
-    // for(k = 0; k < p ; k++)
-    // {
-    //     printf("name a[%d] = %s\n",k,a[k].name);
-    // }
+
 
     for (k = 1; k < p; k++) 
     {
@@ -58,6 +61,7 @@ int main(int argc, char* argv[])
 
     thread_func(a+0);
 
+
     for (k = 1; k < p; k++) 
     {
         status = pthread_join(tid[k],0);
@@ -70,43 +74,16 @@ int main(int argc, char* argv[])
                 return -12;
         }
 
+
     }
+    // printf("s = %d\n",errsum);
+    if(errsum < 0) return -1;
 
     
 
     
 
-    for(k = 0 ; k < p; k++)
-        s += err[k];
     
-    if(s<0)
-    {
-        printf("Have errors, programm stopped\n");
-
-        for(k = 0 ; k < p; k++)
-        {
-            switch (err[k])
-            {
-            case 0:
-                break;
-            case -1:
-                printf("file %s doesnt exist or cant be open\n",a[k].name);
-                break;
-
-            case -2:
-                printf("file %s has bad content\n",a[k].name);
-                break;
-
-            default:
-                printf("file %s has unknown error\n",a[k].name);
-                break;
-            }
-        }
-        delete []err;
-        delete []a;
-        delete []tid;
-        return -1;
-    }
 
     for (k = 0; k < p; k++) 
     {
@@ -120,5 +97,6 @@ int main(int argc, char* argv[])
     delete []tid;
     delete []err;
     delete []a;
+    pthread_barrier_destroy(&barrier);
     return 0;
 }

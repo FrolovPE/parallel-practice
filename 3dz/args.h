@@ -9,19 +9,21 @@ char *name{};
 int k{};
 int p{};
 int res{};
+int n{};
 int *err{};
 int *errsum{};
-double *locMin{};
+// double *locMin{};
 args *allargs{};
+args *lastarg{};
 pthread_barrier_t *barrier{};
 
-int x1{};
-int x2{};
-int x3{};
-int x4{};
+double x1{};
+double x2{};
+double x3{};
+double x4{};
 
-int maxlen{};
-int currlen{};
+// static int maxlen{};
+// int currlen{};
 
 args() = default;
 

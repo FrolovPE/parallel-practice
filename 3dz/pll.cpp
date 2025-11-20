@@ -39,6 +39,7 @@ void* thread_func(void *ptr)
             // printf("file %s doesnt exist or cant be open\n",a->name);
 
             err[k] = -1;
+            pthread_barrier_wait(barrier);
 
         }
         else
@@ -118,9 +119,11 @@ void* thread_func(void *ptr)
 
     // static double globalMin = locMin[0];
 
+    int *errsum = a->errsum;
+
     if(k == 0 )
     {
-        int *errsum = a->errsum;
+        
 
         for(k = 0 ; k < p; k++)
             *errsum += err[k];
@@ -153,13 +156,27 @@ void* thread_func(void *ptr)
         }
         else
         {
+            int index = 0;
+
+            for(int i = 0; i < p; i++)
+            {
+                if(allargs[i].n != 0)
+                {
+                    index = i;
+                    // printf("index = %d allargs[i].n = %d in file %s\n",index,allargs[i].n,allargs[i].name);
+                    break;
+                }
+            }
+            
+
            for(int i = 0; i < p ; i++)
            {
             f = fopen(allargs[i].name,"r");
 
                 if(allargs[i].n != 0)
                 {
-                    if(i!=0)
+
+                    if(i!=index && i!=0)
                     {
                         for(int j = i-1 ; j >= 0; j--)
                         {
@@ -315,6 +332,8 @@ void* thread_func(void *ptr)
     }
 
     pthread_barrier_wait(barrier);
+
+    if(*a->errsum < 0) return (void*)SUCCESS;
 
     // printf("globalMin  = %lf\n",globalMin);
 

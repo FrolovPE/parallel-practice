@@ -14,8 +14,9 @@ void* thread_func(void *ptr)
     res=res;
     a->res = res;
     double *arr = a->arr;
-    double *carr = a->carr;
+    // double *carr = a->carr;
     double elapsed = get_full_time();
+    double prev{},next{},chng{};
 
     
     
@@ -25,27 +26,45 @@ void* thread_func(void *ptr)
     int start = k*h;
     int end = k*h + localn;
 
+    arr=arr;
+    prev=prev;
+    next=next;
+    end=end;
+    start=start;
     // printf("in thread %d n = %d p = %d localn = %d\n",k,n,p,localn);
 
-    // printf("in thread %d my local arr area: ",k);
-    // for(int i = start; i < end; i++ )
-    // {
-        // printf("%lf ",arr[i]);
-    // }
-    // printf("\n");
-
-    // printf("in thread %d my new local arr area: ",k);
-    // if(k != 0 && k*h - 2 >= 0 && k*h + localn + 2 < n)   
-    // {
-        for(int i = start; i < end; i++ )
+        if(localn > 4)
         {
-            if(i - 2 >= 0 && i + 2 < n)
-                // printf("%lf ",arr[i]);
-                arr[i] = (carr[i - 2] + carr[i + 2])/2.0;
+            for(int i = start; i < end; i++ )
+            {
+                // if(i - 2 >= 0 && i + 2 < n)
+                if(i >= start + 2 && i <=end - 2)
+                {
+                    if(arr + (i - 2) >= arr && arr + (i + 2) < arr + n )
+                    {   
+                        prev = arr[i - 2];
+                        next = arr[i + 2];
+                        chng = (prev + next)/2.0;
+                    }
+                    printf("for a[%d] = %lf prev = %lf next = %lf chng = %lf\n",i,arr[i],prev,next,chng);
+                }
+                
+
+            }
         }
-    // }
-    // printf("\n");
+        // else
+        // {
+        //     if(k == 0)
+        //     {
+        //         for(int i = start; i < end; i++ )
+        //         {
+                    
+        //         }
+        //     }
+        // }
     
+
+
 
     pthread_barrier_wait(barrier);
 

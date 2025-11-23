@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     // int *err = new int[p];
 
     double *arr = new double[n]();
-    double *carr = new double[n]();
+    // double *carr = new double[n]();
 
     // for(k = 0; k < p ; k++) 
     // {
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         delete []tid;
         // delete []err;
         delete []arr;
-        delete []carr;
+        // delete []carr;
         return -1;
 
     }
@@ -66,10 +66,11 @@ int main(int argc, char* argv[])
 
         while(c < n && fscanf(f,"%lf",&arr[c]) == 1)
         {
-            carr[c] = arr[c];
+            // carr[c] = arr[c];
             c++;
             
         }
+
         double tmp = 0;
 
         if(fscanf(f,"%lf",&tmp) == 1 || c!=n)
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])
             delete []tid;
             // delete []err;
             delete []arr;
-            delete []carr;
+            // delete []carr;
             fclose(f);
             return -2;
         }
@@ -89,7 +90,7 @@ int main(int argc, char* argv[])
             delete []tid;
             // delete []err;
             delete []arr;
-            delete []carr;
+            // delete []carr;
             fclose(f);
             return -2;
 
@@ -107,16 +108,16 @@ int main(int argc, char* argv[])
         delete []tid;
         // delete []err;
         delete []arr;
-        delete []carr;
+        // delete []carr;
         return -1;
     }
 
-    for(int i = 0 ; i < n; i++)
-    {
-        if(i == 0) printf("arr: ");
-        printf("%lf ",carr[i]);
-        if(i == n-1) printf("\n");
-    }
+    // for(int i = 0 ; i < n; i++)
+    // {
+    //     if(i == 0) printf("arr: ");
+    //     printf("%lf ",carr[i]);
+    //     if(i == n-1) printf("\n");
+    // }
 
     args *a = new args[p];
 
@@ -129,7 +130,7 @@ int main(int argc, char* argv[])
         a[k].n = n;
         a[k].p = p;
         a[k].arr = arr;
-        a[k].carr = carr;
+        // a[k].carr = carr;
         a[k].k = k;
         // a[k].err = err;
         // a[k].errsum = &errsum;
@@ -152,7 +153,7 @@ int main(int argc, char* argv[])
                 delete []tid;
                 // delete []err;
                 delete []a;
-                delete []carr;
+                // delete []carr;
                 delete []arr;
                 return -11;
 
@@ -171,7 +172,7 @@ int main(int argc, char* argv[])
                 delete []tid;
                 // delete []err;
                 delete []a;
-                delete []carr;
+                // delete []carr;
                 delete []arr;
                 return -12;
         }
@@ -217,7 +218,7 @@ int main(int argc, char* argv[])
     
     delete []arr;
     delete []tid;
-    // delete []err;
+    // delete []carr;
     delete []a;
     pthread_barrier_destroy(&barrier);
     return 0;

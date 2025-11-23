@@ -124,6 +124,10 @@ void* thread_func(void *ptr)
     // printf("globalMin  = %lf\n",globalMin);
 
     f = fopen(name,"r");
+    if(!f)
+    {
+        return (void*)-1;
+    }
 
     for(int i = 0; i < n ; i++)
     {

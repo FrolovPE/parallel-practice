@@ -3,7 +3,7 @@ extcpp = pll.cpp pll.h
 obj = main.o pll.o
 cxx = g++
 exec = a.out ga.out
-flags = -O3 -mfpmath=sse -fstack-protector-all -g -W -Wall -Wextra -Wunused -Wcast-align -Werror -pedantic -pedantic-errors -Wfloat-equal -Wpointer-arith -Wformat-security -Wmissing-format-attribute -Wformat=1 -Wwrite-strings -Wcast-align -Wno-long-long -Woverloaded-virtual -Wnon-virtual-dtor -Wcast-qual -Wno-suggest-attribute=format
+flags = -O3 -Wall -Wenum-compare   -fsanitize=address -mfpmath=sse -fstack-protector-all -std=c++17 -g -W  -Wextra -Wunused -Wcast-align -Werror -pedantic -pedantic-errors -Wfloat-equal -Wpointer-arith -Wformat-security -Wmissing-format-attribute -Wformat=1 -Wwrite-strings -Wcast-align -Wno-long-long -Woverloaded-virtual -Wnon-virtual-dtor -Wcast-qual -Wno-suggest-attribute=format
 parallel = -pthread $(flags)
 parallelWO3 = -pthread $(wo3)
 gprO3 = -pg $(flags)
@@ -22,15 +22,19 @@ ga.out: $(obj)
 all: $(exec)
 
 pll.o: $(extcpp)
-	$(cxx) -c $< -o $@
+	$(cxx) -c $(flags) $< -o $@
 
 main.o: $(allcppfiles)
-	$(cxx) -c $< -o $@
+	$(cxx) -c $(flags) $< -o $@
 
 clean:
-	rm -f $(obj) $(exec) *zip
+	  
+	rm -f $(obj) $(exec) Frolov_PS.zip pll.zip
+	
+	
+
+mainzip:
+	zip Frolov_PS.zip $(allcppfiles) makefile 
 
 zip:
-	zip Frolov_PS.zip $(allcppfiles) makefile
-
-
+	zip pll.zip $(allcppfiles) makefile  

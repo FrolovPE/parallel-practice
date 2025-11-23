@@ -1,11 +1,10 @@
-allcppfiles = main.cpp pll.cpp args.h pll.h mytime.cpp mytime.h
-extpll= pll.cpp pll.h
-extmytime =  mytime.cpp mytime.h
-obj = main.o pll.o mytime.o
+allcppfiles = main.cpp pll.cpp args.h pll.h
+extcpp = pll.cpp pll.h
+obj = main.o pll.o
 cxx = g++
 exec = a.out ga.out
-flags = -O3 -mfpmath=sse -fstack-protector-all -g -W -Wall -Wextra -Wunused -Wcast-align -Werror -pedantic -pedantic-errors -Wfloat-equal -Wpointer-arith -Wformat-security -Wmissing-format-attribute -Wformat=1 -Wwrite-strings -Wcast-align -Wno-long-long -Woverloaded-virtual -Wnon-virtual-dtor -Wcast-qual -Wno-suggest-attribute=format
-parallel = -pthread -DNDEBUG -Wunused-variable $(flags)
+flags = -O3 -Wall -Wenum-compare   -fsanitize=address -mfpmath=sse -fstack-protector-all -std=c++17 -g -W  -Wextra -Wunused -Wcast-align -Werror -pedantic -pedantic-errors -Wfloat-equal -Wpointer-arith -Wformat-security -Wmissing-format-attribute -Wformat=1 -Wwrite-strings -Wcast-align -Wno-long-long -Woverloaded-virtual -Wnon-virtual-dtor -Wcast-qual -Wno-suggest-attribute=format
+parallel = -pthread $(flags)
 parallelWO3 = -pthread $(wo3)
 gprO3 = -pg $(flags)
 gpr = -pg $(wo3)
@@ -22,14 +21,11 @@ ga.out: $(obj)
 
 all: $(exec)
 
-pll.o: $(extpll)
-	$(cxx) -c $< -o $@
+pll.o: $(extcpp)
+	$(cxx) -c $(flags) $< -o $@
 
 main.o: $(allcppfiles)
-	$(cxx) -c $< -o $@
-
-mytime.o: $(extmytime)
-	$(cxx) -c $< -o $@
+	$(cxx) -c $(flags) $< -o $@
 
 clean:
 	  

@@ -1,5 +1,6 @@
 #include "pll.h"
 #include "args.h"
+#include <cmath>
 
 void* thread_func(void *ptr)
 {
@@ -18,6 +19,7 @@ void* thread_func(void *ptr)
     double *x2 = &(a->x2);
     double *x3 = &(a->x3);
     double *x4 = &(a->x4);
+    double eps = 1e-15;
 
     static int maxlen = 2;
     static int currlen = 2;
@@ -46,7 +48,7 @@ void* thread_func(void *ptr)
         {
             
 
-            while(status = (fscanf(f,"%lf",&curr) == 1))
+            while((status = (fscanf(f,"%lf",&curr) == 1)))
             {
                 n++;
                 // printf("IN FILE %s\n",name);
@@ -209,7 +211,7 @@ void* thread_func(void *ptr)
                             }
                             else
                             {
-                                if(curr == prev1 + prev2) 
+                                if(fabs(curr - (prev1 + prev2)) < eps) 
                                 {   
                                     
                                     currlen++;
@@ -250,7 +252,7 @@ void* thread_func(void *ptr)
                                     // printf("SIT11 prev1 = %lf from file %s prev2 = %lf from file %s curr = %lf from file %s currlen = %d\n",prev1,allargs[i].lastarg->lastarg->name,prev2,allargs[i].lastarg->name,curr,allargs[i].name,currlen);
 
 
-                                    if(curr == prev1 + prev2) 
+                                    if(fabs(curr - (prev1 + prev2)) < eps) 
                                     {   
                                         
                                         currlen++;
@@ -274,7 +276,7 @@ void* thread_func(void *ptr)
 
                                     // printf("SIT21 prev1 = %lf from file %s prev2 = %lf from file %s curr = %lf from file %s currlen = %d\n",prev1,allargs[i].lastarg->lastarg->name,prev2,allargs[i].lastarg->name,curr,allargs[i].name,currlen);
 
-                                    if(curr == prev1 + prev2) 
+                                    if(fabs(curr - (prev1 + prev2)) < eps) 
                                     {   
                                         
                                         currlen++;
@@ -301,7 +303,7 @@ void* thread_func(void *ptr)
                                 // printf("SIT2 prev1 = %lf from file %s prev2 = %lf from file %s curr = %lf from file %s currlen = %d\n",prev1,allargs[i].lastarg->name,prev2,allargs[i].lastarg->name,curr,allargs[i].name,currlen);
                             
                             
-                                if(curr == prev1 + prev2) 
+                                if(fabs(curr - (prev1 + prev2)) < eps) 
                                 {   
                                     
                                     currlen++;

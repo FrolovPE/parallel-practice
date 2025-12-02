@@ -14,6 +14,7 @@ testfold =matrixtests/
 testexe = ./a.out
 
 
+
 a.out: $(obj)
 	$(cxx) $(parallel) $(obj) -o $@
 
@@ -46,5 +47,3 @@ zip:
 gitadd:
 	git add $(allcppfiles) makefile
 
-gitcom:
-	git commit -m "'$(date -R | head -c 26) '" -a

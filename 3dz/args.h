@@ -22,6 +22,12 @@ double x2{};
 double x3{};
 double x4{};
 
+int maxlen{};
+int currlen{};
+int lastchng{};
+
+double maxval{};
+
 // static int maxlen{};
 // int currlen{};
 

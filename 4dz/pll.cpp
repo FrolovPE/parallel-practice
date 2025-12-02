@@ -16,7 +16,12 @@ void* thread_func(void *ptr)
     double *arr = a->arr;
     // double *carr = a->carr;
     double elapsed = get_full_time();
-    double prev{},next{},chng{};
+    double prev0{},next0{},chng{},prev1{},next1{};
+    double x1{},x2{},x3{},x4{};
+    (void)x1;
+    (void)x2;
+    (void)x3;
+    (void)x4;
 
     
     
@@ -27,98 +32,112 @@ void* thread_func(void *ptr)
     int end = k*h + localn;
 
     arr=arr;
-    prev=prev;
-    next=next;
+    prev0=prev0;
+    next0=next0;
     end=end;
     start=start;
-    // printf("in thread %d n = %d p = %d localn = %d\n",k,n,p,localn);
+    chng=chng;
+    printf("in thread %d n = %d p = %d localn = %d start = %d end = %d\n",k,n,p,localn,start,end);
+    printf("in thread %d arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf\n",k,start,arr[start],start+1,arr[start + 1],end - 1 , arr[end-1],end - 2, arr[end -2]);
 
-        if(localn > 4)
+
+
+    if(arr + start >= arr + 2 && arr + start < arr + (n - 2))
+    {
+        // printf("in thread %d start arr[%d] = %lf ",k,start,arr[start]);
+        x1 = (arr[start - 2] + arr[start + 2])/2.0;
+        if(localn > 1) 
         {
-            for(int i = start; i < end; i++ )
+            x2 = (arr[start + 1 - 2] + arr[start+ 1 + 2])/2.0;
+            // printf(" start + 1 arr[%d] = %lf ",start+1,arr[start + 1]);
+        }
+        // printf("\n");
+    }
+    if(arr + end <= arr + (n - 2) && arr + end > arr + 2)
+    {
+        // printf("in thread %d end - 1 arr[%d] = %lf ",k,end-1,arr[end-1]);
+        x4 = (arr[end -1 - 2] + arr[end -1 + 2])/2.0;
+        if(localn > 1) 
+        {
+            x3 = (arr[end - 2 - 2] + arr[end - 2 + 2])/2.0;
+            // printf(" end - 2 arr[%d] = %lf ",end - 2,arr[end-2]);
+        }
+        // printf("\n");
+    }
+    
+    if(localn > 4)
+    {    
+        int c0 = 0;
+        int c1 = 0;
+        for(int i = start; i < end ; i++)
+        {
+            if(i >= start + 2 && i <end - 2 && i%2 == 0)
             {
-                // if(i - 2 >= 0 && i + 2 < n)
-                if(i >= start + 2 && i <=end - 2)
-                {
-                    if(arr + (i - 2) >= arr && arr + (i + 2) < arr + n )
-                    {   
-                        prev = arr[i - 2];
-                        next = arr[i + 2];
-                        chng = (prev + next)/2.0;
-                    }
-                    printf("for a[%d] = %lf prev = %lf next = %lf chng = %lf\n",i,arr[i],prev,next,chng);
-                }
                 
 
+                if(c0 > 0)
+                {
+                    next0 = arr[i];
+                    arr[i] = (prev0 + arr[i + 2])/2.0;
+                    // printf("for a[%d] = %lf prev = %lf next = %lf \n",i,arr[i],prev0,next0);
+                    prev0 = next0;
+                }
+                else
+                {
+                prev0 = arr[i];
+                arr[i] = (arr[i - 2] + arr[i + 2])/2.0;
+                
+                // printf("for a[%d] = %lf prev = %lf\n",i,arr[i],prev0);
+                c0++;
+                }
             }
+            else if(i >= start + 2 && i <end - 2 && i%2 == 1)
+            {
+                
+
+                if(c1 > 0)
+                {
+                    next1 = arr[i];
+                    arr[i] = (prev1 + arr[i + 2])/2.0;
+                    // printf("for a[%d] = %lf prev = %lf next = %lf \n",i,arr[i],prev1,next1);
+                    prev1 = next1;
+                }
+                else
+                {
+                prev1 = arr[i];
+                arr[i] = (arr[i - 2] + arr[i + 2])/2.0;
+                
+                // printf("for a[%d] = %lf prev = %lf\n",i,arr[i],prev1);
+                c1++;
+                }
+            }
+
+            
         }
-        // else
-        // {
-        //     if(k == 0)
-        //     {
-        //         for(int i = start; i < end; i++ )
-        //         {
-                    
-        //         }
-        //     }
-        // }
+    }
     
 
+
+    
+
+    pthread_barrier_wait(barrier);
+
+    if(arr + start >= arr + 2 && arr + start < arr + (n - 2) )
+    {
+        arr[start] = x1;
+        if(localn > 1 && arr + start + 1 < arr + (n - 2) ) arr[start + 1] = x2;
+    }
+    if(arr + end <= arr + (n - 2) && arr + end > arr + 2 )
+    {
+        arr[end - 1] = x4;
+        if(localn > 1 && arr + end -1 > arr + 2) arr[end - 2] = x3;
+    }
 
 
     pthread_barrier_wait(barrier);
 
    
 
-
-
-    // if(k == 0 )
-    // {
-    //     int *errsum = a->errsum;
-
-    //     for(int i  = 0 ; i < p; i++)
-    //         *errsum += err[i];
-        
-    //     if(*errsum<0)
-    //     {
-    //         printf("Have errors, programm stopped\n");
-
-    //         for(int i = 0 ; i < p; i++)
-    //         {
-    //             switch (err[i])
-    //             {
-    //             case 0:
-    //                 break;
-    //             case -1:
-    //                 // printf("File %s doesnt exist or cant be open\n",a[k].name);
-    //                 break;
-
-    //             case -2:
-    //                 // printf("File %s has bad content\n",a[k].name);
-    //                 break;
-
-    //             default:
-    //                 // printf("File %s has unknown error\n",a[k].name);
-    //                 break;
-    //             }
-    //         }
-            
-            
-    //     }
-    //     // else
-    //     // {
-
-    //     // }
-    // }
-
-    // pthread_barrier_wait(barrier);
-
-
-    // f = fopen(name,"r");
-
-    // a->res = res;
-
-    // fclose(f);
 
     elapsed = get_full_time() - elapsed;
     *a->totalelapsed += elapsed;

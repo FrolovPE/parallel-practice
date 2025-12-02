@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
         {
             if(i == 0) printf("RESULT %d: ",p);
             printf("%lf ",arr[i]);
-            if(i == n-1) printf("\n");
+            if(i == n-1) printf("\n\n");
         }
     
     delete []arr;

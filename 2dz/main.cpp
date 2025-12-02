@@ -34,6 +34,8 @@ int main(int argc, char* argv[])
 
     pthread_barrier_init(&barrier,0,p);
 
+    double globalMin{};
+
     for(k = 0 ; k < p; k++)
     {
         a[k].name = argv[k+1];
@@ -41,6 +43,7 @@ int main(int argc, char* argv[])
         a[k].p = p;
         a[k].err = err;
         a[k].locMin = locMin;
+        a[k].globalMin = &globalMin;
         a[k].errsum = &errsum;
         a[k].barrier = &barrier;
 

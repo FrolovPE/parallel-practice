@@ -12,6 +12,7 @@ int res{};
 int *err{};
 int *errsum{};
 double *locMin{};
+double *globalMin{};
 pthread_barrier_t *barrier{};
 
 };

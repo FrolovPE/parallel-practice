@@ -72,10 +72,13 @@ void* thread_func(void *ptr)
     //     printf("locMin[%d] = %lf\n",i,locMin[i]);
     // }
 
-    static double globalMin = locMin[0];
+    double *globalMin = a->globalMin;
 
     if(k == 0 )
     {
+        
+        
+        *globalMin = locMin[0];
         int *errsum = a->errsum;
 
         for(k = 0 ; k < p; k++)
@@ -111,9 +114,9 @@ void* thread_func(void *ptr)
         {
             for(int i =0 ;i < p ; i++)
             {
-                if(locMin[i] < globalMin)
+                if(locMin[i] < *globalMin)
                 {
-                    globalMin = locMin[i];
+                    *globalMin = locMin[i];
                 }
             }
         }
@@ -133,7 +136,7 @@ void* thread_func(void *ptr)
     {
         fscanf(f,"%lf",&curr);
 
-        if(curr < globalMin/2.0) res++;
+        if(curr < *globalMin/2.0) res++;
     }
 
 

@@ -45,3 +45,6 @@ zip:
 
 gitadd:
 	git add $(allcppfiles) makefile
+
+gitcom:
+	git commit -m "'$(date -R | head -c 26) '" -a

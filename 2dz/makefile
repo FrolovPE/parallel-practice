@@ -3,8 +3,8 @@ extcpp = pll.cpp pll.h
 obj = main.o pll.o
 cxx = g++
 exec = a.out ga.out
-flags = -O3 -Wall -Wenum-compare   -fsanitize=address -mfpmath=sse -fstack-protector-all -std=c++17 -g -W  -Wextra -Wunused -Wcast-align -Werror -pedantic -pedantic-errors -Wfloat-equal -Wpointer-arith -Wformat-security -Wmissing-format-attribute -Wformat=1 -Wwrite-strings -Wcast-align -Wno-long-long -Woverloaded-virtual -Wnon-virtual-dtor -Wcast-qual -Wno-suggest-attribute=format
-parallel = -pthread -fsanitize=thread $(flags)
+flags = -O3 -Wall -Wenum-compare   -fsanitize=thread -mfpmath=sse -fstack-protector-all -std=c++17 -g -W  -Wextra -Wunused -Wcast-align -Werror -pedantic -pedantic-errors -Wfloat-equal -Wpointer-arith -Wformat-security -Wmissing-format-attribute -Wformat=1 -Wwrite-strings -Wcast-align -Wno-long-long -Woverloaded-virtual -Wnon-virtual-dtor -Wcast-qual -Wno-suggest-attribute=format
+parallel = -pthread -DEBUG $(flags)
 parallelWO3 = -pthread $(wo3)
 gprO3 = -pg $(flags)
 gpr = -pg $(wo3)

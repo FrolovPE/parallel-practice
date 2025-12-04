@@ -7,8 +7,8 @@
 int main(int argc, char* argv[])
 {
     int p = argc-1;
-    int k;
-    int status;
+    int k{};
+    int status{};
     int errsum = 0;
     int totalres = 0;
 

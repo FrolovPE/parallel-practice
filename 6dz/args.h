@@ -6,6 +6,7 @@ class args
 public:
 
 double *arr{};
+double *ch{};
 // double *carr{};
 int k{};
 int p{};

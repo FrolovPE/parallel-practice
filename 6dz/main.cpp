@@ -124,6 +124,9 @@ int main(int argc, char* argv[])
     printm(arr,n1,n2);
 
     args *a = new args[p];
+    int z = n2-2;
+    double *ch = new double [3*z];
+    for(int i = 0; i < 3*z; i++) ch[i] = i;
 
     pthread_barrier_t barrier;
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -138,6 +141,7 @@ int main(int argc, char* argv[])
         a[k].n2 = n2;
         a[k].p = p;
         a[k].arr = arr;
+        a[k].ch = ch;
         a[k].k = k;
         a[k].barrier = &barrier;
         a[k].mutex = &mutex;

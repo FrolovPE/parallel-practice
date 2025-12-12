@@ -28,6 +28,7 @@ void* thread_func(void *ptr)
 {
     args *a = (args*) ptr;
     // int *err = a->err;
+    double *ch = a->ch;
     int n = a->n;
     int n1 = a->n1;
     int n2 = a->n2;
@@ -48,7 +49,7 @@ void* thread_func(void *ptr)
     (void)x3;
     (void)x4;
 
-    
+    int z = n2-2;
     
     a->localn1 = (k == p-1 ? n1/p + n1%p : n1/p);
     // a->localn2 = (k == p-1 ? n1/p + n%p : n/p);
@@ -66,42 +67,88 @@ void* thread_func(void *ptr)
     prev1=prev1;
     next1=next1;
     n=n;
-    // end=end;
-    // start=start;
+    end=end;
+    start=start;
     localn1=localn1;
     localn2=localn2;
     chng=chng;
     barrier=barrier;
-    printf("in thread %d n1 = %d n2 = %d p = %d  start = %d end = %d\n",k,n1,n2,p,start,end);
+    // printf("in thread %d n1 = %d n2 = %d p = %d  start = %d end = %d\n",k,n1,n2,p,start,end);
     // printf("in thread %d arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf\n",k,start,arr[start],start+1,arr[start + 1],end - 1 , arr[end-1],end - 2, arr[end -2]);
+    static int check;
+    int zone{};
+
+    if(k == 0) check = 0;
+
+    pthread_barrier_wait(barrier);
 
 
-    for (int i = start; i < end; ++i) {
+    for (int i = k + 1; i < n1 -1; i+=p) 
+    {
 
-        if (i == 0 || i == n1 - 1) continue;
+        pthread_mutex_lock(mutex);
+        
+        if(check < 3)
+        {    
+            zone = check;
+            check++;
+            
+            
+            // pthread_barrier_wait(barrier);
 
-        for (int j = 0; j < n2; ++j) {
-            if (j == 0 || j == n2 - 1) continue;
-
-            pthread_mutex_lock(mutex);
-
-            double aij = arr[i * n2 + j];
-            if (aij < 0.0) {
-                double up    = arr[(i - 1) * n2 + j];
-                double down  = arr[(i + 1) * n2 + j];
-                double left  = arr[i * n2 + (j - 1)];
-                double right = arr[i * n2 + (j + 1)];
-
-                double newval = up + down + left + right - 4.0 * aij;
+            for (int j = 1; j < n2 -1; ++j) 
+            {
+                double newval{};
                 
-                printf("changed arr[%d,%d] = %lf =  %lf + %lf + %lf + %lf - %lf, arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf\n",i,j,newval,up,down,left,right,4 * arr[i * n2 + j],i-1,j,up,i+1,j,down,i,j-1,left,i,j+1,right);
 
-                arr[i * n2 + j] = newval;
+                double aij = arr[i * n2 + j];
+                ch[zone*z + j - 1] = newval;
+                if (aij < 0.0) {
+                    double up    = arr[(i - 1) * n2 + j];
+                    double down  = arr[(i + 1) * n2 + j];
+                    double left  = arr[i * n2 + (j - 1)];
+                    double right = arr[i * n2 + (j + 1)];
 
-              
+                    newval = up + down + left + right - 4.0 * aij;
+                    
+                    // printf("changed arr[%d,%d] = %lf =  %lf + %lf + %lf + %lf - %lf, arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf\n",i,j,newval,up,down,left,right,4 * arr[i * n2 + j],i-1,j,up,i+1,j,down,i,j-1,left,i,j+1,right);
+                    
+                    ch[zone*z + j - 1] = newval;
+
+                
+                }
+                printf("thread %d i = %d ch[%d * %d + %d] = %lf\n",k,i,zone,z,j-1,ch[zone*z + j - 1]);
+
+                // pthread_mutex_unlock(mutex);
             }
-
             pthread_mutex_unlock(mutex);
+            // if((n1 - 2 - i) < p) pthread_barrier_wait(barrier);
+        }
+        else
+        {
+            check = 0;
+            pthread_mutex_unlock(mutex);
+            // pthread_barrier_wait(barrier);
+            // if(k == PTHREAD_BARRIER_SERIAL_THREAD) check = 0;
+            printf("thread %d i = %d ii= %d zone = %d\n",k,i,(i > p ? i-p:i),zone);
+            for (int j = 1; j < n2 -1; ++j)
+            {
+                if (arr[(i > p ? i-p:i) * n2 + j] < 0 && zone < 3)
+                {
+                    arr[(i > p ? i-p:i) * n2 + j] = ch[zone*n2+j-1];
+                }
+            }
+        }
+    }
+
+    pthread_barrier_wait(barrier);
+    if(k == 0)
+    {
+        for(int i = 0 ; i < 3 * z; i++)
+        {
+            if(i == 0) printf("ch:\n");
+            printf("%lf ",ch[i]);
+            if(i == 3 * z - 1) printf("\n");
         }
     }
    

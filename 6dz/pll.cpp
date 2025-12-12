@@ -4,11 +4,33 @@
 #include <cmath>
 #define EPS 1e-15
 
+
+void printm(double *a, int n1, int n2)
+{
+    if(!a)
+    {
+        printf("bad pointer on matrix\n");
+        return;
+    }
+
+    for(int i{}; i < n1; i++)
+    {
+        printf("\n");
+        for(int j{}; j < n2 ; j++)
+        {
+            printf("%.10e ",a[i * n2 + j]);
+        }
+    }
+    printf("\n");
+}
+
 void* thread_func(void *ptr)
 {
     args *a = (args*) ptr;
     // int *err = a->err;
     int n = a->n;
+    int n1 = a->n1;
+    int n2 = a->n2;
     int k = a->k;
     int p = a->p;
     pthread_barrier_t *barrier = a->barrier;
@@ -28,138 +50,61 @@ void* thread_func(void *ptr)
 
     
     
-    a->localn = (k == p-1 ? n/p + n%p : n/p);
-    int localn = a->localn;
-    int h = n/p;
+    a->localn1 = (k == p-1 ? n1/p + n1%p : n1/p);
+    // a->localn2 = (k == p-1 ? n1/p + n%p : n/p);
+    int localn1 = a->localn1;
+    int localn2 = a->localn2;
+    int h = n1/p;
     int start = k*h;
-    int end = k*h + localn;
+    int end = k*h + localn1;
 
+    n1=n1;
+    n2=n2;
     arr=arr;
     prev0=prev0;
     next0=next0;
     prev1=prev1;
     next1=next1;
-    end=end;
-    start=start;
+    n=n;
+    // end=end;
+    // start=start;
+    localn1=localn1;
+    localn2=localn2;
     chng=chng;
-    // printf("in thread %d n = %d p = %d localn = %d start = %d end = %d\n",k,n,p,localn,start,end);
+    barrier=barrier;
+    printf("in thread %d n1 = %d n2 = %d p = %d  start = %d end = %d\n",k,n1,n2,p,start,end);
     // printf("in thread %d arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf\n",k,start,arr[start],start+1,arr[start + 1],end - 1 , arr[end-1],end - 2, arr[end -2]);
 
-    // static int currlen;
-    // static double sum;
 
-    // currlen=currlen;
-    // sum=sum;
+    for (int i = start; i < end; ++i) {
 
-    // if(k == 0)
-    // {
-    //     currlen = 2;
-    //     sum = 0;
-    // }
-        
-    
+        if (i == 0 || i == n1 - 1) continue;
 
-    // pthread_barrier_wait(barrier);
+        for (int j = 0; j < n2; ++j) {
+            if (j == 0 || j == n2 - 1) continue;
 
-    // for(int i = start; i < end ; i++)
-    // {    
-    //     if( i >= 2)
-    //     {
-    //         prev0 = arr[i - 2];
-    //         prev1 = arr[i - 1];
-    //         printf("thread %d prev0 = %lf prev1 = %lf arr[%d] = %lf currlen = %d sum = %lf\n",k,prev0,prev1,i,arr[i],currlen,sum);
-    //         if(fabs(arr[i] - (prev0 + prev1)) < EPS )
-    //         {
-    //             pthread_mutex_lock(mutex);
-    //             currlen++;
-    //             if(currlen > 3)
-    //                 sum += arr[i];
-    //             else 
-    //                 sum += prev0 + prev1 + arr[i];
-    //             printf("thread %d CHANGED currlen = %d sum = %lf\n",k,currlen,sum);
-    //             if(i == n-1)
-    //             {
-    //                 if(sum > 0 || currlen > 2)
-    //                 {
-    //                     for(int j = 0 ; j < currlen; j++)
-    //                     {
-    //                         arr[i - j] = sum/(double)currlen;
-    //                     }
-    //                 }
-    //             }
+            pthread_mutex_lock(mutex);
 
-    //             pthread_mutex_unlock(mutex);
-    //         }
-    //         else if(fabs(arr[i] - (prev0 + prev1)) > EPS )
-    //         {
-    //             pthread_mutex_lock(mutex);
-    //             if(sum > 0 || currlen > 2)
-    //             {
-    //                 for(int j = 1 ; j <= currlen; j++)
-    //                 {
-    //                     arr[i - j] = sum/(double)currlen;
-    //                 }
-    //             }
-    //             currlen = 2;
-    //             sum = 0;
-    //             pthread_mutex_unlock(mutex);
-    //         }
-    //     }
-    // }
+            double aij = arr[i * n2 + j];
+            if (aij < 0.0) {
+                double up    = arr[(i - 1) * n2 + j];
+                double down  = arr[(i + 1) * n2 + j];
+                double left  = arr[i * n2 + (j - 1)];
+                double right = arr[i * n2 + (j + 1)];
 
-    int i = (start > 1 ? start:2);
+                double newval = up + down + left + right - 4.0 * aij;
+                
+                printf("changed arr[%d,%d] = %lf =  %lf + %lf + %lf + %lf - %lf, arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf\n",i,j,newval,up,down,left,right,4 * arr[i * n2 + j],i-1,j,up,i+1,j,down,i,j-1,left,i,j+1,right);
 
-    while(i < end && i < n)
-    {
-        pthread_mutex_lock(mutex);
-        if(fabs(arr[i] - (arr[i - 1] + arr[i - 2])) < EPS)
-        {
-            
-            int l,r;
+                arr[i * n2 + j] = newval;
 
-            l = i -2;
-            r = i;
-
-            while( l > 0 && fabs(arr[l+1] - (arr[l] + arr[l - 1])) < EPS )
-            {
-                l--;
-            }
-            while( r < n - 1 && fabs(arr[r+1] - (arr[r] + arr[r - 1])) < EPS )
-            {
-                // printf("before change r = %d\n",r);
-                r++;
-                // printf("after change r = %d\n",r);
+              
             }
 
-            // printf("thread %d i = %d shifted l = %d r = %d arr[%d] = %lf arr[%d] = %lf\n",k,i,l,r,l,arr[l],r,arr[r]);
-
-            int currlen = r - l + 1;
-            double sum = 0;
-
-            for(int j = l; j < r + 1; j++ )
-            {
-                sum += arr[j];
-            }
-
-            for(int j = l; j < r + 1; j++ )
-            {
-                arr[j] = sum/(double)currlen;
-            }
-            
-            i = r+1;
-
-
+            pthread_mutex_unlock(mutex);
         }
-        else
-        {
-            ++i;
-        }
-        pthread_mutex_unlock(mutex);
     }
-
-
-    pthread_barrier_wait(barrier);
-
+   
    
 
 

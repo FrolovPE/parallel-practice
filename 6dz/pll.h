@@ -8,6 +8,7 @@
 
 #define SUCCESS 0
 
+void printm(double *a, int n1, int n2);
 void* thread_func(void *ptr);
 
 #endif

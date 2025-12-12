@@ -12,31 +12,33 @@ int main(int argc, char* argv[])
     int status;
     // int errsum = 0;
     // int totalres = 0;
-    int n{};
+    int n1{},n2{};
     char *name{};
     // double curr{};
     double totalelapsed = 0;
 
-    if(!(argc == 4 && sscanf(argv[1],"%d",&p) == 1 && sscanf(argv[2],"%d",&n) == 1 ))
+    if(!(argc == 5 && sscanf(argv[1],"%d",&p) == 1 && sscanf(argv[2],"%d",&n1) == 1 && sscanf(argv[3],"%d",&n2) == 1))
     {
-        printf("Usage: %s <p> <n> <file with array> \n",argv[0]);
+        printf("Usage: %s <p> <n1> <n2> <file with array> \n",argv[0]);
         return 0;
     }
 
-    if(p <= 0 || n <=0 )
+    if(p <= 0 || n1 <=0 || n2 <=0)
     {
-        printf("Error: p or n <=0\n");
+        printf("Error: p or n1 or n2 <=0\n");
         return -3;
     }
-    if(p > n) p = n;
+    if(p > n1) p = n1;
 
-    name = argv[3];
+    name = argv[4];
 
-    // printf("p = %d n = %d name = %s\n",p,n,name);
+    // printf("p = %d n1 = %d n2 = %d name = %s\n",p,n1,n2,name);
      
     pthread_t *tid = new pthread_t[p];
 
     // int *err = new int[p];
+
+    int n = n1*n2;
 
     double *arr = new double[n];
     // double *carr = new double[n]();
@@ -102,15 +104,15 @@ int main(int argc, char* argv[])
         
     }
 
-    if(n<5)
-    {
-        printf("algorithm not applicable\n");
-        delete []tid;
-        // delete []err;
-        delete []arr;
-        // delete []carr;
-        return -1;
-    }
+    // if(n<5)
+    // {
+    //     printf("algorithm not applicable\n");
+    //     delete []tid;
+    //     // delete []err;
+    //     delete []arr;
+    //     // delete []carr;
+    //     return -1;
+    // }
 
     // for(int i = 0 ; i < n; i++)
     // {
@@ -118,6 +120,8 @@ int main(int argc, char* argv[])
     //     printf("%lf ",carr[i]);
     //     if(i == n-1) printf("\n");
     // }
+    printf("matrix a:\n");
+    printm(arr,n1,n2);
 
     args *a = new args[p];
 
@@ -130,12 +134,11 @@ int main(int argc, char* argv[])
     for(k = 0 ; k < p; k++)
     {
         a[k].n = n;
+        a[k].n1 = n1;
+        a[k].n2 = n2;
         a[k].p = p;
         a[k].arr = arr;
-        // a[k].carr = carr;
         a[k].k = k;
-        // a[k].err = err;
-        // a[k].errsum = &errsum;
         a[k].barrier = &barrier;
         a[k].mutex = &mutex;
         a[k].totalelapsed = &totalelapsed;
@@ -216,12 +219,10 @@ int main(int argc, char* argv[])
 
     // }
 
-    for(int i = 0 ; i < n; i++)
-        {
-            if(i == 0) printf("RESULT %d: ",p);
-            printf("%lf ",arr[i]);
-            if(i == n-1) printf("\n\n");
-        }
+    printf("RESULT %d:\n ",p);
+
+    printm(arr,n1,n2);
+            
     
     delete []arr;
     delete []tid;

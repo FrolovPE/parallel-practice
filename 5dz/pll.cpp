@@ -42,7 +42,7 @@ void* thread_func(void *ptr)
     end=end;
     start=start;
     chng=chng;
-    printf("in thread %d n = %d p = %d localn = %d start = %d end = %d\n",k,n,p,localn,start,end);
+    // printf("in thread %d n = %d p = %d localn = %d start = %d end = %d\n",k,n,p,localn,start,end);
     // printf("in thread %d arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf\n",k,start,arr[start],start+1,arr[start + 1],end - 1 , arr[end-1],end - 2, arr[end -2]);
 
     // static int currlen;
@@ -111,9 +111,10 @@ void* thread_func(void *ptr)
 
     while(i < end && i < n)
     {
+        pthread_mutex_lock(mutex);
         if(fabs(arr[i] - (arr[i - 1] + arr[i - 2])) < EPS)
         {
-            pthread_mutex_lock(mutex);
+            
             int l,r;
 
             l = i -2;
@@ -125,12 +126,12 @@ void* thread_func(void *ptr)
             }
             while( r < n - 1 && fabs(arr[r+1] - (arr[r] + arr[r - 1])) < EPS )
             {
-                printf("before change r = %d\n",r);
+                // printf("before change r = %d\n",r);
                 r++;
-                printf("after change r = %d\n",r);
+                // printf("after change r = %d\n",r);
             }
 
-            printf("thread %d i = %d shifted l = %d r = %d arr[%d] = %lf arr[%d] = %lf\n",k,i,l,r,l,arr[l],r,arr[r]);
+            // printf("thread %d i = %d shifted l = %d r = %d arr[%d] = %lf arr[%d] = %lf\n",k,i,l,r,l,arr[l],r,arr[r]);
 
             int currlen = r - l + 1;
             double sum = 0;
@@ -145,7 +146,7 @@ void* thread_func(void *ptr)
                 arr[j] = sum/(double)currlen;
             }
             
-            pthread_mutex_unlock(mutex);
+            i = r+1;
 
 
         }
@@ -153,6 +154,7 @@ void* thread_func(void *ptr)
         {
             ++i;
         }
+        pthread_mutex_unlock(mutex);
     }
 
 
@@ -162,7 +164,9 @@ void* thread_func(void *ptr)
 
 
     elapsed = get_full_time() - elapsed;
+    pthread_mutex_lock(mutex);
     *a->totalelapsed += elapsed;
+    pthread_mutex_unlock(mutex);
     printf("CPU Time thread %d = %.2lf\n",k,elapsed);
 
     

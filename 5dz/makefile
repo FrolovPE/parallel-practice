@@ -4,8 +4,14 @@ extmytime =  mytime.cpp mytime.h
 obj = main.o pll.o mytime.o
 cxx = g++
 exec = a.out ga.out
+<<<<<<< HEAD
 flags = -O3 -mfpmath=sse -fsanitize=thread -fstack-protector-all -g -W -Wall -Wextra -Wunused -Wcast-align -Werror -pedantic -pedantic-errors -Wfloat-equal -Wpointer-arith -Wformat-security -Wmissing-format-attribute -Wformat=1 -Wwrite-strings -Wcast-align -Wno-long-long -Woverloaded-virtual -Wnon-virtual-dtor -Wcast-qual -Wno-suggest-attribute=format
 parallel = -pthread -DNDEBUG -Wunused-variable  $(flags)
+=======
+flags = -O3 -mfpmath=sse -fstack-protector-all -g -W -Wall -Wextra -Wunused -Wcast-align -Werror -pedantic -pedantic-errors -Wfloat-equal -Wpointer-arith -Wformat-security -Wmissing-format-attribute -Wformat=1 -Wwrite-strings -Wcast-align -Wno-long-long -Woverloaded-virtual -Wnon-virtual-dtor -Wcast-qual -Wno-suggest-attribute=format
+tsan = -pthread -DNDEBUG $(flags) -fsanitize=thread
+parallel = -pthread -DNDEBUG -Wunused-variable $(flags)
+>>>>>>> ec29bc6 ('Tue Dec 16 16:23:28 ')
 parallelWO3 = -pthread -fsanitize=thread $(wo3)
 gprO3 = -pg $(flags)
 gpr = -pg $(wo3)
@@ -17,6 +23,9 @@ testexe = ./a.out
 
 a.out: $(obj)
 	$(cxx) $(parallel) $(obj) -o $@
+	
+tsan: $(obj)
+	$(cxx) $(tsan) $(obj) -o $@
 
 ga.out: $(obj)
 	$(cxx) $(parallelWO3) $(obj) -o $@

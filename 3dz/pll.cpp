@@ -2,167 +2,119 @@
 #include "args.h"
 #include <cmath>
 #define EPS 1e-15
+using namespace std;
+
+void update(int &global_len, double &global_max, int c_len, double c_max)
+{
+    if(c_len > global_len || (c_len == global_len && c_max > global_max ))
+    {
+        global_len = c_len;
+        global_max = c_max;
+    }
+}
 
 void* thread_func(void *ptr)
 {
     args *a = (args*) ptr;
     int *err = a->err;
-    int n = 0; int k=a->k;
-    // double *locMin = a->locMin;
+    int k=a->k;
     int p = a->p;
-    // double tmin = 0;
     char *name = a->name;
     pthread_barrier_t *barrier = a->barrier;
     double curr=0,prev1=0,prev2=0;
     int res = 0;
     args *allargs = a->allargs;
-    double *x1 = &(a->x1);
-    double *x2 = &(a->x2);
-    double *x3 = &(a->x3);
-    double *x4 = &(a->x4);
-    allargs=allargs;
-    // double eps = 1e-15;
+    int c_len{};
+    double c_max = -1e64;
+    bool is_pref = true;
 
-    int *maxlen = &a->maxlen;//static int maxlen = 2;
-    int *currlen = &a->currlen;// static int currlen = 2;
-    int *lastchng = &a->lastchng;
-    int status = 0;
-    // args *lastarg = nullptr;
+    a->seg_max = -1e64;
+    a->best_len = 0;
+    a->best_max = -1e64;
+    a->pref_len = 0;
+    a->pref_max = -1e64;
+    int status{};
 
-    a->res = res;
-    // *maxlen = 2;
-    // *currlen = 2;
-    double *maxval = &a->maxval;// static double maxval = 0 ;
+    (void)allargs;
+    (void)is_pref;
+    
 
-    *maxlen = 2;
-    *currlen = 2;
-    *maxval = 0;
 
-    pthread_barrier_wait(barrier);
 
     
-        FILE *f;
-        f = fopen(name,"r");
-        if(!f)
+    FILE *f;
+    f = fopen(name,"r");
+    if(!f)
+    {
+        // printf("file %s doesnt exist or cant be open\n",a->name);
+
+        err[k] = -1;
+
+
+    }
+    else
+    {
+        while((status = (fscanf(f,"%lf",&curr) == 1)))
         {
-            // printf("file %s doesnt exist or cant be open\n",a->name);
+            a->n++;
+            a->seg_max = max(a->seg_max,curr);
 
-            err[k] = -1;
-            // pthread_barrier_wait(barrier);
-
-        }
-        else
-        {
-            
-
-            while((status = (fscanf(f,"%lf",&curr) == 1)))
+            if(a->n==1)
             {
-                n++;
-                // printf("IN FILE %s\n",name);
-                if(n == 1)
-                {
-                    prev1 = curr;
-                    *x1 = curr;
-                }
-                else if(n == 2)
-                {
-                    prev2 = curr;
-                    *x2 = curr;
-                }
-                else
-                {
-                    if(fabs(curr - (prev1 + prev2))<EPS)
-                    {
-                        (*currlen)++;
-                        if (*maxlen <= *currlen) 
-                        {
-                            *maxval = std::max(*maxval,curr);
-                            // if(fabs(*maxval - curr) < EPS) (*lastchng)++;
-                        }
+                a->first1 = curr;
+                prev2 = curr;
+                c_len = 1;
+                c_max =  curr;
+                a->pref_len = 1;
+                a->pref_max = 1;
 
-                        printf("thread %d currlen = %d maxval = %lf\n",k,*currlen,*maxval);
-                    }
-                    else
-                    {
-                        // *maxval = std::max(prev2,*maxval);
-                        *maxlen = std::max(*currlen,*maxlen);
-                        *currlen = 2;
-                        (*lastchng)++;
-                    }
-                    printf("thread %d prev1 = %lf prev2 = %lf curr = %lf currlen = %d maxlen = %d maxval = %lf lastchng = %d\n",k,prev1,prev2,curr,*currlen,*maxlen,*maxval,*lastchng);
-                    prev1 = prev2;
-                    prev2 = curr;
-                }
             }
-            if(!feof(f))
+            else if(a->n==2)
             {
-                // printf("file %s has bad content\n",a->name);
+                a->first2 =  curr;
+                prev1 = curr;
+                c_len = 2;
+                c_max = max(c_max,curr);
+                a->pref_len = 2;
+                a->pref_max = c_max;
 
-                err[k] = -2;
-
+                update(a->best_len,a->best_max,c_len,c_max);
             }
             else
             {
-                *x3 = prev1;
-                *x4 = prev2;
+                if(fabs(curr - (prev1 + prev2)) < EPS)
+                {
+                    c_len++;
+                    c_max = max(c_max,curr);
+
+                }
+                else
+                {
+                    update(a->best_len,a->best_max,c_len,c_max);
+
+                    c_len = 2;
+                    c_max = max(curr,prev1);
+                }
+
             }
-
-            a->n = n;
-
-            // pthread_barrier_wait(barrier);
-
-            printf("In file %s x1 = %lf x2 = %lf x3 = %lf x4 = %lf n = %d maxlen = %d maxval = %lf lastchng = %d \n",name,*x1,*x2,*x3,*x4,a->n,*maxlen,*maxval,*lastchng);
-
-            
-            
-
-            fclose(f);
-
-           
-            
         }
-
-    
-
-    pthread_barrier_wait(barrier);
-
-    int index = 0;
-
-    for(int i = 0; i < p; i++)
-    {
-        if(allargs[i].n != 0)
+        if(!feof(f))
         {
-            index = i;
-            // printf("index = %d allargs[i].n = %d in file %s\n",index,allargs[i].n,allargs[i].name);
-            break;
+            err[k] = -1;
         }
     }
 
-    if(k > index && a->n != 0)
-    {
-        for(int j = k - 1; j>=0 ; j--)
-        {
-            if(allargs[j].n !=0)
-            {
-                a->lastarg = &allargs[j];
-                break;
-            }
-        }
-        printf("lastarg name %s in file %s\n",a->lastarg->name,name);
-    }
-        
-    
 
 
-   
 
 
-    // for(int i =0 ; i < p; i++)
-    // {
-    //     printf("locMin[%d] = %lf\n",i,locMin[i]);
-    // }
 
-    // static double globalMin = locMin[0];
+
+
+
+
+
+
 
     int *errsum = a->errsum;
 
@@ -199,30 +151,30 @@ void* thread_func(void *ptr)
             
             
         }
-        else
-        {
-            double glval{};
-            int glmlen{};
-            glval=glval;
-            glmlen=glmlen;
+        // else
+        // {
+        //     double glval{};
+        //     int glmlen{};
+        //     glval=glval;
+        //     glmlen=glmlen;
 
-            for(int i = 0; i < p; i++)
-            {
-                if(allargs[i].lastarg)
-                {
-                    if(allargs[i].lastarg->n > 1 )
-                    {
-                        prev1 = allargs[i].lastarg->x3;
-                        prev2 = allargs[i].lastarg->x4;
+        //     for(int i = 0; i < p; i++)
+        //     {
+        //         if(allargs[i].lastarg)
+        //         {
+        //             if(allargs[i].lastarg->n > 1 )
+        //             {
+        //                 prev1 = allargs[i].lastarg->x3;
+        //                 prev2 = allargs[i].lastarg->x4;
 
-                        if(fabs(allargs[i].x1 -(prev1 + prev2)) < EPS)
-                        {
+        //                 if(fabs(allargs[i].x1 -(prev1 + prev2)) < EPS)
+        //                 {
 
-                        }
-                    }
-                }
-            }
-        }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
         // else
         // {
         //     int index = 0;

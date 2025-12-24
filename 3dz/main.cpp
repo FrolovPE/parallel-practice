@@ -34,16 +34,20 @@ int main(int argc, char* argv[])
 
     pthread_barrier_init(&barrier,0,p);
 
+    int global_best_len{};       
+    double global_best_max{};
+
     for(k = 0 ; k < p; k++)
     {
         a[k].name = argv[k+1];
         a[k].k = k;
         a[k].p = p;
         a[k].err = err;
-        // a[k].locMin = locMin;
         a[k].errsum = &errsum;
         a[k].barrier = &barrier;
         a[k].allargs = a;
+        a[k].global_best_len = &global_best_len;
+        a[k].global_best_max = &global_best_max;
 
     }
 

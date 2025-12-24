@@ -17,16 +17,23 @@ args *allargs{};
 args *lastarg{};
 pthread_barrier_t *barrier{};
 
-double x1{};
-double x2{};
-double x3{};
-double x4{};
+double first1{}, first2{};
+double last_prev{}, last{};
 
-int maxlen{};
-int currlen{};
-int lastchng{};
+double seg_max{};
 
-double maxval{};
+int pref_len{};       
+double pref_max{};
+
+int suff_len{};       
+double suff_max{};
+
+int best_len{};       
+double best_max{};
+
+
+int* global_best_len{};       
+double* global_best_max{};   
 
 // static int maxlen{};
 // int currlen{};

@@ -62,6 +62,7 @@ void* thread_func(void *ptr)
             if(a->n==1)
             {
                 a->first1 = curr;
+                a->last = curr;
                 prev2 = curr;
                 c_len = 1;
                 c_max =  curr;
@@ -72,6 +73,8 @@ void* thread_func(void *ptr)
             else if(a->n==2)
             {
                 a->first2 =  curr;
+                a->last_prev = a->first1;
+                a->last = curr;
                 prev1 = curr;
                 c_len = 2;
                 c_max = max(c_max,curr);
@@ -96,13 +99,35 @@ void* thread_func(void *ptr)
                     c_max = max(curr,prev1);
                 }
 
+                if (is_pref)
+                {
+                    if (fabs(curr - (prev1 + prev2)) < EPS)
+                    {
+                        a->pref_len++;
+                        a->pref_max = std::max(a->pref_max, curr);
+                    }
+                    else
+                    {
+                        is_pref = false;
+                    }
+                }
+
+                prev2 = prev1;
+                prev1 = curr;
+                a->last_prev = prev2;
+                a->last = prev1;
+
             }
         }
         if(!feof(f))
         {
             err[k] = -1;
         }
+
+        fclose(f);
     }
+
+
 
 
 

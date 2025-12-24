@@ -52,12 +52,12 @@ void* thread_func(void *ptr)
     int z = n2-2;
     
     a->localn1 = (k == p-1 ? n1/p + n1%p : n1/p);
-    // a->localn2 = (k == p-1 ? n1/p + n%p : n/p);
+    a->localn2 = (k == p-1 ? n2/p + n2%p : n2/p);
     int localn1 = a->localn1;
     int localn2 = a->localn2;
-    int h = n1/p;
-    int start = k*h;
-    int end = k*h + localn1;
+    int h = n2/p;
+    int start = (k == 0 ? 1:k*h);
+    int end = (k == p-1 ? n2 - 1:k*h + localn2);
 
     n1=n1;
     n2=n2;
@@ -73,84 +73,92 @@ void* thread_func(void *ptr)
     localn2=localn2;
     chng=chng;
     barrier=barrier;
+    ch=ch;
+    z=z;
     // printf("in thread %d n1 = %d n2 = %d p = %d  start = %d end = %d\n",k,n1,n2,p,start,end);
     // printf("in thread %d arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf arr[%d] = %lf\n",k,start,arr[start],start+1,arr[start + 1],end - 1 , arr[end-1],end - 2, arr[end -2]);
-    static int check;
+    // static int check;
     int zone{};
+    double *buf{};
+    int loc_ch{};
 
-    if(k == 0) check = 0;
+    // if(k == 0) check = 0;
 
     pthread_barrier_wait(barrier);
 
-
-    for (int i = k + 1; i < n1 -1; i+=p) 
+    for(int i = 1 ; i < n1 - 1; i++)
     {
+        zone = i%3;
+        buf = ch + zone * z;
 
-        pthread_mutex_lock(mutex);
-        
-        if(check < 3)
-        {    
-            zone = check;
-            check++;
-            
-            
-            // pthread_barrier_wait(barrier);
-
-            for (int j = 1; j < n2 -1; ++j) 
-            {
-                double newval{};
-                
-
-                double aij = arr[i * n2 + j];
-                ch[zone*z + j - 1] = newval;
-                if (aij < 0.0) {
-                    double up    = arr[(i - 1) * n2 + j];
-                    double down  = arr[(i + 1) * n2 + j];
-                    double left  = arr[i * n2 + (j - 1)];
-                    double right = arr[i * n2 + (j + 1)];
-
-                    newval = up + down + left + right - 4.0 * aij;
-                    
-                    // printf("changed arr[%d,%d] = %lf =  %lf + %lf + %lf + %lf - %lf, arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf\n",i,j,newval,up,down,left,right,4 * arr[i * n2 + j],i-1,j,up,i+1,j,down,i,j-1,left,i,j+1,right);
-                    
-                    ch[zone*z + j - 1] = newval;
-
-                
-                }
-                printf("thread %d i = %d ch[%d * %d + %d] = %lf\n",k,i,zone,z,j-1,ch[zone*z + j - 1]);
-
-                // pthread_mutex_unlock(mutex);
-            }
-            pthread_mutex_unlock(mutex);
-            // if((n1 - 2 - i) < p) pthread_barrier_wait(barrier);
-        }
-        else
+        for(int j = start; j < end; j++)
         {
-            check = 0;
-            pthread_mutex_unlock(mutex);
-            // pthread_barrier_wait(barrier);
-            // if(k == PTHREAD_BARRIER_SERIAL_THREAD) check = 0;
-            printf("thread %d i = %d ii= %d zone = %d\n",k,i,(i > p ? i-p:i),zone);
-            for (int j = 1; j < n2 -1; ++j)
+            double aij = arr[i * n2 + j];
+            double newval = 0;
+
+            if (aij < 0.0) 
             {
-                if (arr[(i > p ? i-p:i) * n2 + j] < 0 && zone < 3)
+                double up    = arr[(i - 1) * n2 + j];
+                double down  = arr[(i + 1) * n2 + j];
+                double left  = arr[i * n2 + (j - 1)];
+                double right = arr[i * n2 + (j + 1)];
+
+                newval = up + down + left + right - 4.0 * aij;
+                newval = newval;
+                
+                // printf("changed arr[%d,%d] = %lf =  %lf + %lf + %lf + %lf - %lf, arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf,arr[%d,%d] = %lf\n",i,j,newval,up,down,left,right,4 * arr[i * n2 + j],i-1,j,up,i+1,j,down,i,j-1,left,i,j+1,right);
+
+                loc_ch++;
+            }
+            buf[j - 1] = newval;
+            // printf("thread = %d buf[%d] = %lf\n",k,j -1, newval);
+            // printf("thread %d i = %d zone = %d ch[%d * %d + %d] = %lf\n",k,i,zone,zone,z,j-1,ch[zone*z + j - 1]);
+        }
+
+        pthread_barrier_wait(barrier);
+
+
+        if(i > 2)
+        {
+            int row1 = i - 2;
+            int row2 = i -1;
+            int prev1 = row1%3;
+            int prev2 = row2%3;
+
+            double *prev1buf = ch +  prev1 * z;
+            double *prev2buf = ch +  prev2 * z;
+
+            for(int s = i - 2; s < i -1;s++)
+                for(int j = start; j < end ; j++)
                 {
-                    arr[(i > p ? i-p:i) * n2 + j] = ch[zone*n2+j-1];
+                    if(arr[s * n2 + j] < 0)
+                    {
+                        if(s == row1) arr[s * n2 + j] = prev1buf[j - 1];
+                        if(s == row2) arr[s * n2 + j] = prev2buf[j - 1];
+                    }
                 }
-            }
         }
+
+        pthread_barrier_wait(barrier);
+
+
     }
 
-    pthread_barrier_wait(barrier);
-    if(k == 0)
-    {
-        for(int i = 0 ; i < 3 * z; i++)
-        {
-            if(i == 0) printf("ch:\n");
-            printf("%lf ",ch[i]);
-            if(i == 3 * z - 1) printf("\n");
-        }
-    }
+
+
+
+    
+
+    // pthread_barrier_wait(barrier);
+    // if(k == 0)
+    // {
+    //     for(int i = 0 ; i < 3 * z; i++)
+    //     {
+    //         if(i == 0) printf("ch:\n");
+    //         printf("%lf ",ch[i]);
+    //         if(i == 3 * z - 1) printf("\n");
+    //     }
+    // }
    
    
 

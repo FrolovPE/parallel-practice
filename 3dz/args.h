@@ -20,7 +20,7 @@ pthread_barrier_t *barrier{};
 double first1{}, first2{};
 double last_prev{}, last{};
 
-double seg_max{};
+double l_max{};
 
 int pref_len{};       
 double pref_max{};

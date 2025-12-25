@@ -13,6 +13,15 @@ void update(int &global_len, double &global_max, int c_len, double c_max)
     }
 }
 
+void info(const args *a)
+{
+      printf("thread %d a->first1 = %lf a->first2 = %lf a->last_prev = %lf a->last = %lf\
+        a->pref_len = %d a->pref_max = %lf \
+        a->suff_len = %d a->suff_max = %lf \
+        a->best_len = %d a->best_max = %lf a->l_max = %lf\n\n"
+        ,a->k,a->first1,a->first2,a->last_prev,a->last,a->pref_len,a->pref_max,a->suff_len,a->suff_max,a->best_len,a->best_max,a->l_max);
+}
+
 void* thread_func(void *ptr)
 {
     args *a = (args*) ptr;
@@ -28,7 +37,7 @@ void* thread_func(void *ptr)
     double c_max = -1e64;
     bool is_pref = true;
 
-    a->seg_max = -1e64;
+    a->l_max = -1e64;
     a->best_len = 0;
     a->best_max = -1e64;
     a->pref_len = 0;
@@ -57,7 +66,7 @@ void* thread_func(void *ptr)
         while((status = (fscanf(f,"%lf",&curr) == 1)))
         {
             a->n++;
-            a->seg_max = max(a->seg_max,curr);
+            a->l_max = max(a->l_max,curr);
 
             if(a->n==1)
             {
@@ -67,7 +76,7 @@ void* thread_func(void *ptr)
                 c_len = 1;
                 c_max =  curr;
                 a->pref_len = 1;
-                a->pref_max = 1;
+                a->pref_max = curr;
 
             }
             else if(a->n==2)
@@ -103,8 +112,9 @@ void* thread_func(void *ptr)
                 {
                     if (fabs(curr - (prev1 + prev2)) < EPS)
                     {
+                        
                         a->pref_len++;
-                        a->pref_max = std::max(a->pref_max, curr);
+                        a->pref_max = max(a->pref_max, curr);
                     }
                     else
                     {
@@ -127,16 +137,34 @@ void* thread_func(void *ptr)
         fclose(f);
     }
 
+  
+
+    update(a->best_len,a->best_max,c_len,c_max);
+    a->suff_len = c_len;
+    a->suff_max = c_max;
+
+    if(a->n == 0)
+    {
+        a->l_max = -1e64;
+        a->best_len = 0;
+        a->pref_len = 0;
+        a->suff_len = 0;
+    }
+    else if(a->n == 1)
+    {
+        a->best_len = 1;
+        a->pref_len = 1;
+        a->suff_len = 1;
+        a->best_max = a->first1;
+        a->pref_max = a->first1;
+        a->suff_max = a->first1;
+    }
+    
+    info(a);
 
 
 
-
-
-
-
-
-
-
+    pthread_barrier_wait(barrier);
 
 
 
@@ -176,205 +204,92 @@ void* thread_func(void *ptr)
             
             
         }
-        // else
-        // {
-        //     double glval{};
-        //     int glmlen{};
-        //     glval=glval;
-        //     glmlen=glmlen;
+        else
+        {
+            *a->global_best_len = 0;
+            *a->global_best_max = -1e64;
 
-        //     for(int i = 0; i < p; i++)
-        //     {
-        //         if(allargs[i].lastarg)
-        //         {
-        //             if(allargs[i].lastarg->n > 1 )
-        //             {
-        //                 prev1 = allargs[i].lastarg->x3;
-        //                 prev2 = allargs[i].lastarg->x4;
+            int total{};
+            int cur_len = 0;
+            double cur_max = -1e64;
 
-        //                 if(fabs(allargs[i].x1 -(prev1 + prev2)) < EPS)
-        //                 {
+            double last2{};
+            double last1{};
 
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-        // else
-        // {
-        //     int index = 0;
+            (void)cur_len;
+            (void)cur_max;
+            (void)last2;
+            (void)last1;
 
-        //     for(int i = 0; i < p; i++)
-        //     {
-        //         if(allargs[i].n != 0)
-        //         {
-        //             index = i;
-        //             // printf("index = %d allargs[i].n = %d in file %s\n",index,allargs[i].n,allargs[i].name);
-        //             break;
-        //         }
-        //     }
-            
+            for(int i = 0 ; i < p; i++)
+            {
+                args &arg = allargs[i];
 
-        //    for(int i = 0; i < p ; i++)
-        //    {
-        //     f = fopen(allargs[i].name,"r");
+                if(arg.n == 0) continue;
 
-        //         if(allargs[i].n != 0)
-        //         {
+                update(*a->global_best_len,*a->global_best_max,arg.best_len,arg.best_max);
 
-        //             if(i!=index && i!=0)
-        //             {
-        //                 for(int j = i-1 ; j >= 0; j--)
-        //                 {
-        //                     if(allargs[j].n != 0)
-        //                         {
-        //                             allargs[i].lastarg = &allargs[j];
-        //                             break;
-        //                         }
-        //                     // else
-        //                     // {
-        //                     //     allargs[i].lastarg = &allargs[i];
-        //                     // }
-        //                 }
-        //                 // printf("lastarg name %s in file %s\n",allargs[i].lastarg->name,allargs[i].name);
-        //             }else
-        //             {
-        //                 for(int j = 0 ; j < allargs[i].n; j++ )
-        //                 {
-        //                     fscanf(f,"%lf",&curr);
-                            
-        //                     if(j == 1)
-        //                     {
-        //                         prev1 = curr;
-        //                         // *x1 = curr;
-        //                     }
-        //                     else if(j == 2)
-        //                     {
-        //                         prev2 = curr;
-        //                         // *x2 = curr;
-        //                     }
-        //                     else
-        //                     {
-        //                         if(fabs(curr - (prev1 + prev2)) < eps) 
-        //                         {   
-                                    
-        //                             currlen++;
-        //                             if (maxlen < currlen) maxval = std::max(maxval,curr);
-        //                         }
-        //                         else
-        //                         {
-        //                             // printf("prev1 = %lf prev2 = %lf curr = %lf\n",prev1,prev2,curr);
-                                    
-        //                             maxlen = std::max(currlen,maxlen);
-        //                             currlen = 2;
-        //                         }
-        //                         // printf("prev1 = %lf prev2 = %lf curr = %lf\n",prev1,prev2,curr);
-        //                         // printf("In file %s x1 = %lf x2 = %lf x3 = %lf x4 = %lf n = %d maxlen = %d maxval = %lf \n",allargs[i].name,allargs[i].x1,allargs[i].x2,allargs[i].x3,allargs[i].x4,allargs[i].n,maxlen,maxval);
+                if(total == 0)
+                {
+                    total = arg.n;
 
-        //                         prev1 = prev2;
-        //                         prev2 = curr;
-        //                     }
-        //                 }
-                        
-        //                 // printf("lastarg name %s in file %s\n",allargs[i].lastarg->name,allargs[i].name);
-        //             }
+                    if(arg.n == 1)
+                    {
+                        cur_len = 1;
+                        cur_max = arg.first1;
+                        last1 = arg.first1;
+                    }
+                    else
+                    {
+                        cur_len = arg.suff_len;
+                        cur_max = arg.suff_max;
+                        last2 = arg.last_prev;
+                        last1 = arg.last;
+                    }
+                //     printf("thread %d cur_len = %d cur_max = %lf last2 = %lf last1 = %lf\n",
+                // arg.k,cur_len,cur_max,last2,last1);
+                    continue;
+                }
 
-        //             if(allargs[i].lastarg)
-        //             {
-        //                 for(int j = 0 ; j < allargs[i].n; j++ )
-        //                 {
-        //                     if(allargs[i].lastarg->lastarg && allargs[i].lastarg->n == 1)
-        //                     {
-        //                         prev2 = allargs[i].lastarg->x3;
+                if(total == 1)
+                {
 
-        //                         if( allargs[i].lastarg->lastarg->n == 1)
-        //                         {
-        //                             prev1 = allargs[i].lastarg->lastarg->x3;
+                    if(arg.n == 1)
+                    {
+                        cur_len = 2;
+                        cur_max = arg.first1;
 
-        //                             fscanf(f,"%lf",&curr);
+                        last2 = last1;
+                        last1 = arg.first1;
+                        total++;
+                    }
+                    else
+                    {
+                        if( (fabs(arg.first2 - (arg.first1 + last1)) < EPS) && arg.pref_len == arg.n)//back
+                        {
+                            cur_len = 1 + arg.n;
+                            cur_max = arg.pref_max;
+                        }
+                        else
+                        {
+                            cur_len = arg.suff_len; //esli ne prodoljilas' to perehodim k koncu etogo file
+                            cur_max = arg.suff_max;
+                        }
 
-        //                             // printf("SIT11 prev1 = %lf from file %s prev2 = %lf from file %s curr = %lf from file %s currlen = %d\n",prev1,allargs[i].lastarg->lastarg->name,prev2,allargs[i].lastarg->name,curr,allargs[i].name,currlen);
+                    last2 = arg.last_prev;
+                    last1 = arg.last;
+                    total += arg.n;
 
+                    }
+                continue;
+                }
 
-        //                             if(fabs(curr - (prev1 + prev2)) < eps) 
-        //                             {   
-                                        
-        //                                 currlen++;
-        //                                 if (maxlen < currlen) maxval = std::max(maxval,curr);
-        //                             }
-        //                             else
-        //                             {
-        //                                 // printf("prev1 = %lf prev2 = %lf curr = %lf\n",prev1,prev2,curr);
-                                        
-        //                                 maxlen = std::max(currlen,maxlen);
-        //                                 currlen = 2;
-        //                             }
-        //                             prev1 = prev2;
-        //                             prev2 = curr;
-        //                         }
-        //                         else if(allargs[i].lastarg->lastarg->n > 1)
-        //                         {
-        //                             prev1 = allargs[i].lastarg->lastarg->x4;
+                bool cond1 = fabs(arg.first1 - (last1 + last2)) < EPS;
+                
 
-        //                             fscanf(f,"%lf",&curr);
+            }
 
-        //                             // printf("SIT21 prev1 = %lf from file %s prev2 = %lf from file %s curr = %lf from file %s currlen = %d\n",prev1,allargs[i].lastarg->lastarg->name,prev2,allargs[i].lastarg->name,curr,allargs[i].name,currlen);
-
-        //                             if(fabs(curr - (prev1 + prev2)) < eps) 
-        //                             {   
-                                        
-        //                                 currlen++;
-        //                                 if (maxlen < currlen) maxval = std::max(maxval,curr);
-        //                             }
-        //                             else
-        //                             {
-        //                                 // printf("prev1 = %lf prev2 = %lf curr = %lf\n",prev1,prev2,curr);
-                                        
-        //                                 maxlen = std::max(currlen,maxlen);
-        //                                 currlen = 2;
-        //                             }
-        //                             prev1 = prev2;
-        //                             prev2 = curr;
-        //                         }
-        //                         // printf("when lastarg->n == 1 maxlen = %d maxval = %lf in file %s x1 = %lf x2 = %lf x3 = %lf x4 = %lf prev1 = %lf prev2 = %lf curr = %lf currlen = %d\n",maxlen,maxval,allargs[i].name,allargs[i].x1,allargs[i].x2,allargs[i].x3,allargs[i].x4,prev1,prev2,curr,currlen);
-        //                     }
-        //                     else if(allargs[i].lastarg->n > 1)
-        //                     {
-        //                         prev1 = allargs[i].lastarg->x3;
-        //                         prev2 = allargs[i].lastarg->x4;
-        //                         fscanf(f,"%lf",&curr);
-                            
-        //                         // printf("SIT2 prev1 = %lf from file %s prev2 = %lf from file %s curr = %lf from file %s currlen = %d\n",prev1,allargs[i].lastarg->name,prev2,allargs[i].lastarg->name,curr,allargs[i].name,currlen);
-                            
-                            
-        //                         if(fabs(curr - (prev1 + prev2)) < eps) 
-        //                         {   
-                                    
-        //                             currlen++;
-        //                             if (maxlen < currlen) maxval = std::max(maxval,curr);
-        //                         }
-        //                         else
-        //                         {
-        //                             // printf("prev1 = %lf prev2 = %lf curr = %lf\n",prev1,prev2,curr);
-                                    
-        //                             maxlen = std::max(currlen,maxlen);
-        //                             currlen = 2;
-        //                         }
-        //                         // printf("prev1 = %lf prev2 = %lf curr = %lf\n",prev1,prev2,curr);
-        //                         // printf("In file %s x1 = %lf x2 = %lf x3 = %lf x4 = %lf n = %d maxlen = %d maxval = %lf \n",allargs[i].name,allargs[i].x1,allargs[i].x2,allargs[i].x3,allargs[i].x4,allargs[i].n,maxlen,maxval);
-
-        //                         prev1 = prev2;
-        //                         prev2 = curr;
-                            
-        //                     }
-        //                 }
-        //             }
-                // }
-
-        //     fclose(f);
-        //    }
-        // }
-
+        }
     }
 
     pthread_barrier_wait(barrier);

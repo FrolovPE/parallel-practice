@@ -15,11 +15,14 @@ void update(int &global_len, double &global_max, int c_len, double c_max)
 
 void info(const args *a)
 {
+    if(a->n != 0)
+    {
       printf("thread %d a->first1 = %lf a->first2 = %lf a->last_prev = %lf a->last = %lf\
         a->pref_len = %d a->pref_max = %lf \
         a->suff_len = %d a->suff_max = %lf \
         a->best_len = %d a->best_max = %lf a->l_max = %lf\n\n"
         ,a->k,a->first1,a->first2,a->last_prev,a->last,a->pref_len,a->pref_max,a->suff_len,a->suff_max,a->best_len,a->best_max,a->l_max);
+    }
 }
 
 void* thread_func(void *ptr)
@@ -160,7 +163,7 @@ void* thread_func(void *ptr)
         a->suff_max = a->first1;
     }
     
-    info(a);
+    // info(a);
 
 
 
@@ -223,11 +226,42 @@ void* thread_func(void *ptr)
 
             for(int i = 0 ; i < p; i++)
             {
+                
                 args &arg = allargs[i];
 
                 if(arg.n == 0) continue;
 
                 update(*a->global_best_len,*a->global_best_max,arg.best_len,arg.best_max);
+
+                if (total == 1)
+                {
+                    
+                    update(*a->global_best_len, *a->global_best_max, 2, max(last1, arg.first1));
+
+                    if (arg.n >= 2 && fabs(arg.first2 - (arg.first1 + last1))<EPS)
+                    {
+                        
+                        int cand_len = 1 + arg.pref_len; 
+                        double cand_max = max(last1, arg.pref_max);
+                        update(*a->global_best_len, *a->global_best_max, cand_len, cand_max);
+                    }
+                }
+                else if (total >= 2)
+                {
+                    if (fabs(arg.first1 - (last2 + last1))<EPS)
+                    {
+                        
+                        update(*a->global_best_len, *a->global_best_max, cur_len + 1, max(cur_max, arg.first1));
+
+                        if (arg.n >= 2 && fabs(arg.first2 - (arg.first1 + last1))<EPS)
+                        {
+                            
+                            int cand_len = cur_len + arg.pref_len;
+                            double cand_max = max(cur_max, arg.pref_max);
+                            update(*a->global_best_len, *a->global_best_max, cand_len, cand_max);
+                        }
+                    }
+                }
 
                 if(total == 0)
                 {
@@ -265,7 +299,7 @@ void* thread_func(void *ptr)
                     }
                     else
                     {
-                        if( (fabs(arg.first2 - (arg.first1 + last1)) < EPS) && arg.pref_len == arg.n)//back
+                        if( (fabs(arg.first2 - (arg.first1 + last1)) < EPS)  && (arg.n<=2 || arg.pref_len == arg.n))//back
                         {
                             cur_len = 1 + arg.n;
                             cur_max = arg.pref_max;
@@ -285,8 +319,41 @@ void* thread_func(void *ptr)
                 }
 
                 bool cond1 = fabs(arg.first1 - (last1 + last2)) < EPS;
-                
+                bool cond2 = (arg.n >= 2) ? fabs(arg.first2 - (arg.first1 + last1))<EPS : true;
+                bool cond3 = (arg.n <= 2) ? true : (arg.pref_len == arg.n); //esli ves' file fibo posled
+                (void)cond1;
+                (void)cond2;
+                (void)cond3;
 
+                if(cond1 && cond2 && cond3)
+                {
+                    cur_len += arg.n;
+                    cur_max = max(cur_max, arg.l_max);
+                }
+                else if(arg.n == 1)
+                {
+                    cur_len = 2;
+                    cur_max = max(last1,arg.first1);
+                }
+                else
+                {
+                    cur_len = arg.suff_len;
+                    cur_max = arg.suff_max;
+                }
+
+                if(arg.n == 1)
+                {
+                    last2 = last1;
+                    last1 = arg.first1;
+                }
+                else
+                {
+                    last2 = arg.last_prev;
+                    last1 = arg.last;
+                }
+                total +=arg.n;
+
+        
             }
 
         }
@@ -294,18 +361,26 @@ void* thread_func(void *ptr)
 
     pthread_barrier_wait(barrier);
 
+    // printf("THREAD %d HERE\n",a->k);
+
+    // if(a->k == 0) printf("\n\nglobal_best_len = %d global_best_max  = %lf\n",*a->global_best_len,*a->global_best_max);
+
     if(*a->errsum < 0) return (void*)SUCCESS;
 
-    // // printf("globalMin  = %lf\n",globalMin);
+    
 
-    // f = fopen(name,"r");
+    f = fopen(name,"r");
+    if(!f)
+    {
+        return (void*)-1;
+    }
 
-    // for(int i = 0; i < n ; i++)
-    // {
-    //     fscanf(f,"%lf",&curr);
+    for(int i = 0; i < a->n ; i++)
+    {
+        fscanf(f,"%lf",&curr);
 
-    //     if(curr > maxval) res++;
-    // }
+        if(curr > *a->global_best_max) res++;
+    }
 
 
     a->res = res;

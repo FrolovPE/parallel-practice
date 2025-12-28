@@ -9,7 +9,6 @@
 #define SUCCESS 0
 
 void printm(double *a, int n1, int n2);
-bool prime(unsigned long long x);
 void* thread_func(void *ptr);
 
 #endif

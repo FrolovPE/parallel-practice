@@ -8,19 +8,21 @@ public:
 int k{};
 int p{};
 int res{};
-long long  *found{};
+unsigned long long  *found{};
 unsigned long long  sum{};
 unsigned long long int *global_sum{};
 long long  lastprime{};
 bool *find{};
-int end{};
-int N{};
+unsigned long long *start{};
+unsigned long long  *end{};
+unsigned long long int N{};
 args *all{};
 
-int n{};
+unsigned long long n{};
 
 double *totalelapsed{};
 pthread_mutex_t *mutex{};
+pthread_mutex_t *mutex1{};
 pthread_barrier_t *barrier{};
 
 args() = default;

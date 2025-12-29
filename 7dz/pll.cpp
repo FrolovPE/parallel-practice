@@ -10,11 +10,26 @@ bool prime(unsigned long long x)
     if(x % 2 == 0) return x==2;
     
 
-    for(int i = 3; i*i <= x; i+=2)
+    for(unsigned long long  i = 3; i*i <= x; i+=2)
     {
         if(x%i == 0) return false;
     }
     return true;
+}
+
+void process(unsigned long long start,unsigned long long end,unsigned long long &local_sum,unsigned long long &local_found)
+{
+    local_sum = 0;
+    local_found = 0;
+
+    for(unsigned long long k = start; k < end; k+=2)
+    {
+        if(prime(k) && prime(k+6))
+        {
+            local_found++;
+            local_sum += 2*k + 6;
+        }
+    }
 }
 
 void* thread_func(void *ptr)
@@ -24,10 +39,11 @@ void* thread_func(void *ptr)
     int n = a->n;
     int k = a->k;
     int p = a->p;
-    int N = a->N;
+    const unsigned long long int N = a->N;
     args *all = a->all;
     pthread_barrier_t *barrier = a->barrier;
     pthread_mutex_t *mutex = a->mutex;
+    pthread_mutex_t *mutex1 = a->mutex1;
 
     double elapsed = get_full_time();
 
@@ -37,80 +53,119 @@ void* thread_func(void *ptr)
     (void)N;
 
     unsigned long long local_sum{};
-    long long proc{};
-    int start = -1e64;
+    unsigned long long local_found{};
+    unsigned long long start{},end{};
 
     (void)n;
     (void)local_sum;
-    (void)proc;
 
-    pthread_mutex_lock(mutex);
-    for(int i = 0; i < p;i++)
-    {
-        if(start < all[i].end)
-        {
-            start = all[i].end;
-        }
-    }
-    a->end = start + N;
-    pthread_mutex_unlock(mutex);
+    
 
-    start = (start % 2 == 0) ? start+1:start;
+    
 
-    printf("thread %d start = %d end = %d\n",k,start,a->end);
     // unsigned long long first{};
     // unsigned long long sec{};
+    (void)all;
+    unsigned long long ffound{};
 
-    for(int i = start; i < a->end; i+=2)
+    while(ffound <= a->n)
     {
-        if(prime(i) && prime(i+6))
-        {
-            printf("thread %d first = %d sec = %d\n",k,i,i+6);
-            local_sum += 2*i+6;
-            proc++;
-            a->lastprime = i + 6;
-        }
+        pthread_mutex_lock(mutex);
+        start = *a->end+1;
+        start = (start % 2 == 0) ? start+1:start;
+        *a->start = start;
+        *a->end = start + N;
+        end = *a->end;
+        printf("thread %d start = %lld end = %lld a->start = %lld a->end = %lld \n",k,start,end,*a->start,*a->end);
+        pthread_mutex_unlock(mutex);
+        process(start,end,local_sum,local_found);
+        a->sum += local_sum;
+        pthread_mutex_lock(mutex1);
+        // *a->global_sum += local_sum;
+        *a->found += local_found;
+        ffound = *a->found;
+        pthread_mutex_unlock(mutex1);
 
-        if(proc >= n)
-        {
-            pthread_mutex_lock(mutex);
-            *a->global_sum += local_sum;
-            *a->found += proc;
-            *a->find = true;
-            pthread_mutex_unlock(mutex);
-            break;
-        }
     }
 
-    
+    pthread_barrier_wait(barrier);
 
-
-    pthread_mutex_lock(mutex);
-
-    
-    printf("thread %d here\n",k);
-
-    *a->global_sum += local_sum;
-    *a->found += proc;
-    if(*a->found >= n)
+    if(k == 0)
     {
-        for(int i = a->lastprime; *a->found > n; i-=2)
+        // printf("a->found = %lld\n",*a->found);
+        unsigned long long fin_sum{};
+
+         for (int i = 0; i < a->p; i++)
         {
-            if(prime(i) && prime(i-6))
+          fin_sum += all[i].sum;
+        }
+        ffound = *a->found;
+        if(*a->end % 2 == 1) *a->end-=1;
+        unsigned long long i{};
+
+        for(i = *a->end-1; ffound > a->n; i-=2)
+        {
+            if(prime(i) && prime(i+6))
             {
-                *a->global_sum -= 2*i-6;
-                *a->found-=1;
+                printf ("deleted (%llu, %llu)\n", i, i + 6);
+                --ffound;
+                fin_sum -= 2*i+6;
             }
-            
         }
+        *a->global_sum = fin_sum;
     }
-    *a->find = true;
-    pthread_mutex_unlock(mutex);
 
-    if(*a->find)
-    {
-        return (void*)(SUCCESS);
-    }
+    
+
+    // for(unsigned long long int i = start; i < end; i+=2)
+    // {
+    //     if(prime(i) && prime(i+6))
+    //     {
+    //         printf("thread %d first = %lld sec = %lld\n",k,i,i+6);
+    //         local_sum += 2*i+6;
+    //         proc++;
+    //         a->lastprime = i + 6;
+    //     }
+
+    //     if(proc >= n)
+    //     {
+    //         pthread_mutex_lock(mutex);
+    //         *a->global_sum += local_sum;
+    //         *a->found += proc;
+    //         *a->find = true;
+    //         pthread_mutex_unlock(mutex);
+    //         break;
+    //     }
+    // }
+
+    
+
+
+    // pthread_mutex_lock(mutex);
+
+    
+    // printf("thread %d here\n",k);
+
+    // *a->global_sum += local_sum;
+    // *a->found += proc;
+    // if(*a->found >= n)
+    // {
+    //     for(int i = a->lastprime; *a->found > n; i-=2)
+    //     {
+    //         if(prime(i) && prime(i-6))
+    //         {
+    //             *a->global_sum -= 2*i-6;
+    //             *a->found-=1;
+    //         }
+            
+    //     }
+    //     *a->find = true;
+        
+    // }
+    
+    // pthread_mutex_unlock(mutex);
+
+    
 
     
 

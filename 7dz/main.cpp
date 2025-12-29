@@ -12,11 +12,11 @@ int main(int argc, char* argv[])
     int status;
     // int errsum = 0;
     // int totalres = 0;
-    int n{};
+    long long n{};
     // double curr{};
     double totalelapsed = 0;
 
-    if(!(argc == 3 && sscanf(argv[1],"%d",&p) == 1 && sscanf(argv[2],"%d",&n) == 1 ))
+    if(!(argc == 3 && sscanf(argv[1],"%d",&p) == 1 && sscanf(argv[2],"%lld",&n) == 1 ))
     {
         printf("Usage: %s <p> <n>  \n",argv[0]);
         return 0;
@@ -27,6 +27,8 @@ int main(int argc, char* argv[])
         printf("Error: p or n <=0\n");
         return -3;
     }
+
+    // printf("size of ull %ld and size of ulli %ld",sizeof(unsigned long long),sizeof(unsigned long long int));
     
     
     
@@ -46,18 +48,20 @@ int main(int argc, char* argv[])
 
     
 
-    int N = 2000;
+    unsigned long long int N = 2000;
 
     args *a = new args[p];
 
 
     pthread_barrier_t barrier;
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
     pthread_barrier_init(&barrier,0,p);
     unsigned long long int global_sum{};
-    long long found{};
+    unsigned long long found{};
     bool find = false;
+    unsigned long long start{},end{};
     
 
     for(k = 0 ; k < p; k++)
@@ -65,6 +69,8 @@ int main(int argc, char* argv[])
         a[k].n = n;
         a[k].N = N;
         a[k].p = p;
+        a[k].start = &start;
+        a[k].end = &end;
         a[k].k = k;
         a[k].find = &find;
         a[k].found = &found;
@@ -72,6 +78,7 @@ int main(int argc, char* argv[])
         a[k].global_sum = &global_sum;
         a[k].barrier = &barrier;
         a[k].mutex = &mutex;
+        a[k].mutex1 = &mutex1;
         a[k].totalelapsed = &totalelapsed;
         
 
@@ -91,6 +98,7 @@ int main(int argc, char* argv[])
                 delete []a;
                 pthread_barrier_destroy(&barrier);
                 pthread_mutex_destroy(&mutex);
+                pthread_mutex_destroy(&mutex1);
                 return -11;
 
         }
@@ -109,6 +117,7 @@ int main(int argc, char* argv[])
                 delete []a;
                 pthread_barrier_destroy(&barrier);
                 pthread_mutex_destroy(&mutex);
+                pthread_mutex_destroy(&mutex1);
                 return -12;
         }
 
@@ -153,5 +162,6 @@ int main(int argc, char* argv[])
     delete []a;
     pthread_barrier_destroy(&barrier);
     pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&mutex1);
     return 0;
 }

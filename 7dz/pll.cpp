@@ -21,6 +21,7 @@ void process(unsigned long long start,unsigned long long end,unsigned long long 
 {
     local_sum = 0;
     local_found = 0;
+    
 
     for(unsigned long long k = start; k < end; k+=2)
     {
@@ -71,18 +72,20 @@ void* thread_func(void *ptr)
     while(ffound <= a->n)
     {
         pthread_mutex_lock(mutex);
-        start = *a->end+1;
+        start = *a->end;
         start = (start % 2 == 0) ? start+1:start;
         *a->start = start;
         *a->end = start + N;
         end = *a->end;
-        printf("thread %d start = %lld end = %lld a->start = %lld a->end = %lld \n",k,start,end,*a->start,*a->end);
+        // printf("thread %d start = %lld end = %lld a->start = %lld a->end = %lld \n",k,start,end,*a->start,*a->end);
         pthread_mutex_unlock(mutex);
         process(start,end,local_sum,local_found);
+        // printf("local_sum %lld local_found %lld\n",local_sum,local_found);
         a->sum += local_sum;
         pthread_mutex_lock(mutex1);
         // *a->global_sum += local_sum;
         *a->found += local_found;
+        a->local_f +=local_found;
         ffound = *a->found;
         pthread_mutex_unlock(mutex1);
 
@@ -94,22 +97,35 @@ void* thread_func(void *ptr)
     {
         // printf("a->found = %lld\n",*a->found);
         unsigned long long fin_sum{};
+        unsigned long long fin_num{};
 
          for (int i = 0; i < a->p; i++)
         {
-          fin_sum += all[i].sum;
+          if(fin_num <= a->n)
+           { 
+            fin_sum += all[i].sum;
+            fin_num += all[i].local_f;
+           }
+
         }
-        ffound = *a->found;
-        if(*a->end % 2 == 1) *a->end-=1;
+        ffound = fin_num;
+        if(*a->end % 2 == 1) *a->end+=1;
         unsigned long long i{};
+
+        // printf("ffound last %lld ffound %lld fin_sum %lld\n",*a->end,ffound,fin_sum);
+
+        int c = 0;
+
 
         for(i = *a->end-1; ffound > a->n; i-=2)
         {
             if(prime(i) && prime(i+6))
             {
-                printf ("deleted (%llu, %llu)\n", i, i + 6);
+                c++;
+                // printf ("deleted (%llu, %llu) c = %d\n", i, i + 6,c);
                 --ffound;
                 fin_sum -= 2*i+6;
+                
             }
         }
         *a->global_sum = fin_sum;

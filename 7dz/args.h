@@ -10,6 +10,7 @@ int p{};
 int res{};
 unsigned long long  *found{};
 unsigned long long  sum{};
+unsigned long long local_f{};
 unsigned long long int *global_sum{};
 long long  lastprime{};
 bool *find{};

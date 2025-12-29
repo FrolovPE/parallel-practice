@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
     
 
-    unsigned long long int N = 2000;
+    unsigned long long int N = 10000;
 
     args *a = new args[p];
 
@@ -154,6 +154,8 @@ int main(int argc, char* argv[])
     // }
 
     printf("RESULT %d: %lld\n ",p,global_sum);
+
+    // printf("%d\n",31546220-31498168);
 
    
             
